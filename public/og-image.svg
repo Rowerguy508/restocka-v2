@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#16a34a"/>
+  <rect x="100" y="100" width="1000" height="430" rx="20" fill="white"/>
+  <text x="600" y="280" font-family="system-ui, sans-serif" font-size="80" font-weight="bold" fill="#16a34a" text-anchor="middle">ReStocka</text>
+  <text x="600" y="360" font-family="system-ui, sans-serif" font-size="36" fill="#6b7280" text-anchor="middle">Control de inventario simple para restaurantes</text>
+  <text x="600" y="450" font-family="system-ui, sans-serif" font-size="28" fill="#16a34a" text-anchor="middle">Nunca te quedes sin suministros</text>
+</svg>
