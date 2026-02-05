@@ -25,9 +25,10 @@ import LocationsPage from "./pages/owner/LocationsPage";
 import SettingsPage from "./pages/owner/SettingsPage";
 import ManagerDashboard from "./pages/manager/ManagerDashboard";
 
-// Get current hostname
-const getHostname = () => {
-  return window.location.hostname;
+// Get current hostname - defensive check for SSR/edge cases
+const getHostname = (): string => {
+  if (typeof window === 'undefined') return 'restocka.app';
+  return window.location.hostname || 'restocka.app';
 };
 
 // Determine app mode based on hostname
@@ -47,48 +48,25 @@ const getAppMode = (): AppMode => {
 
 const queryClient = new QueryClient();
 
-// Subdomain-aware root component
+// Loading fallback
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 animate-pulse mx-auto mb-4" />
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
 function SubdomainRouter({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
   const [mode] = useState<AppMode>(getAppMode);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Auto-redirect based on subdomain and auth state
-    if (loading) return;
+    console.log('SubdomainRouter - mode:', mode);
+  }, [mode]);
 
-    const currentPath = window.location.pathname;
-
-    if (mode === 'app') {
-      // app.restocka.app should always go to /app/*
-      if (!currentPath.startsWith('/app')) {
-        if (user) {
-          navigate('/app', { replace: true });
-        } else {
-          navigate('/login', { replace: true });
-        }
-      }
-    } else if (mode === 'login') {
-      // login.restocka.app should always be on /login or auth pages
-      if (user && currentPath === '/login') {
-        navigate('/app', { replace: true });
-      }
-    } else {
-      // landing page - redirect logged-in users to app
-      if (user && (currentPath === '/' || currentPath === '/login')) {
-        navigate('/app', { replace: true });
-      }
-    }
-  }, [mode, user, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-      </div>
-    );
-  }
-
+  // Let routes handle auth redirects - just pass through
   return <>{children}</>;
 }
 
