@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function OnboardingPage() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/app');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
       <Card className="w-full max-w-md">
@@ -15,7 +22,7 @@ export default function OnboardingPage() {
           <p className="text-center text-gray-600">
             Let's get you set up with your restaurant inventory management.
           </p>
-          <Button className="w-full" variant="default">
+          <Button className="w-full" variant="default" onClick={handleGetStarted}>
             Get Started
           </Button>
         </CardContent>
