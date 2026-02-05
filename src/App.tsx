@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import PricingPage from "./pages/PricingPage";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import ProductsPage from "./pages/owner/ProductsPage";
 import UsagePage from "./pages/owner/UsagePage";
@@ -35,6 +36,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
