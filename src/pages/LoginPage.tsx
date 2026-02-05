@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Mail, Lock, Loader2, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { t, getLocale } from '@/lib/i18n';
 
-const emailSchema = z.string().email('Correo electrónico inválido');
-const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 caracteres');
+const emailSchema = z.string().email();
 
 type Mode = 'login' | 'signup' | 'reset' | 'reset-sent';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<Mode>('login');
   const [error, setError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const locale = getLocale();
 
   useEffect(() => {
     if (user) {
@@ -37,7 +37,7 @@ export default function LoginPage() {
 
     const emailResult = emailSchema.safeParse(email.trim());
     if (!emailResult.success) {
-      setError('Por favor ingresa un correo válido');
+      setError(t('invalid_email'));
       return;
     }
 
@@ -56,9 +56,13 @@ export default function LoginPage() {
       return;
     }
 
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      setError(passwordResult.error.errors[0].message);
+    if (password.length < 6) {
+      setError(t('password_min'));
+      return;
+    }
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError(t('passwords_not_match'));
       return;
     }
 
@@ -76,17 +80,12 @@ export default function LoginPage() {
 
         if (error) {
           if (error.message.includes('already registered')) {
-            setError('Este correo ya está registrado. Intenta iniciar sesión.');
+            setError(locale === 'es' ? 'Este correo ya está registrado. Intenta iniciar sesión.' : 'This email is already registered. Try signing in.');
           } else {
             setError(error.message);
           }
         } else {
-          toast({
-            title: '¡Cuenta creada!',
-            description: 'Ya puedes iniciar sesión.',
-          });
-          setMode('login');
-          setPassword('');
+          navigate('/onboarding');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -96,14 +95,14 @@ export default function LoginPage() {
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('Correo o contraseña incorrectos');
+            setError(locale === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
           } else {
             setError(error.message);
           }
         }
       }
     } catch (err) {
-      setError('Error de conexión. Intenta de nuevo.');
+      setError(locale === 'es' ? 'Error de conexión. Intenta de nuevo.' : 'Connection error. Try again.');
     }
 
     setLoading(false);
@@ -111,19 +110,19 @@ export default function LoginPage() {
 
   const getTitle = () => {
     switch (mode) {
-      case 'signup': return 'Crear cuenta';
-      case 'reset': return 'Recuperar contraseña';
-      case 'reset-sent': return '¡Correo enviado!';
-      default: return 'Iniciar sesión';
+      case 'signup': return t('signup');
+      case 'reset': return t('reset_password');
+      case 'reset-sent': return t('reset_sent');
+      default: return t('login');
     }
   };
 
   const getDescription = () => {
     switch (mode) {
-      case 'signup': return 'Ingresa tus datos para registrarte';
-      case 'reset': return 'Te enviaremos un enlace para restablecer tu contraseña';
-      case 'reset-sent': return `Revisa tu correo ${email}`;
-      default: return 'Ingresa tu correo y contraseña';
+      case 'signup': return t('signup_description');
+      case 'reset': return t('reset_description');
+      case 'reset-sent': return t('check_email');
+      default: return t('login_description');
     }
   };
 
@@ -136,7 +135,7 @@ export default function LoginPage() {
             <Package className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">ReStocka</h1>
-          <p className="mt-1 text-muted-foreground">Control de inventario simple</p>
+          <p className="mt-1 text-muted-foreground">{locale === 'es' ? 'Control de inventario simple' : 'Simple inventory control'}</p>
         </div>
 
         <Card>
@@ -151,26 +150,26 @@ export default function LoginPage() {
                   <CheckCircle className="h-6 w-6 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Haz clic en el enlace del correo para restablecer tu contraseña.
+                  {locale === 'es' ? `Revisa tu correo ${email}` : `Check your email ${email}`}
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => setMode('login')}
                   className="w-full"
                 >
-                  Volver a iniciar sesión
+                  {t('back_to_login')}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="tu@restaurante.com"
+                      placeholder={t('email_placeholder')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
@@ -182,18 +181,37 @@ export default function LoginPage() {
 
                 {mode !== 'reset' && (
                   <div className="space-y-2">
-                    <Label htmlFor="password">Contraseña</Label>
+                    <Label htmlFor="password">{t('password')}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="password"
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={t('password_placeholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10"
                         required
                         autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {mode === 'signup' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">{t('confirm_password')}</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder={t('password_placeholder')}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>
@@ -212,10 +230,10 @@ export default function LoginPage() {
                   {loading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      {mode === 'signup' ? 'Creando...' : mode === 'reset' ? 'Enviando...' : 'Entrando...'}
+                      {mode === 'signup' ? t('creating_account') : mode === 'reset' ? t('sending_link') : t('signing_in')}
                     </>
                   ) : (
-                    mode === 'signup' ? 'Crear cuenta' : mode === 'reset' ? 'Enviar enlace' : 'Entrar'
+                    mode === 'signup' ? t('signup') : mode === 'reset' ? t('send_link') : t('login')
                   )}
                 </Button>
 
@@ -228,7 +246,7 @@ export default function LoginPage() {
                     }}
                     className="w-full text-sm text-muted-foreground hover:text-primary hover:underline"
                   >
-                    ¿Olvidaste tu contraseña?
+                    {t('forgot_password')}
                   </button>
                 )}
               </form>
@@ -242,12 +260,13 @@ export default function LoginPage() {
                     setMode(mode === 'login' ? 'signup' : 'login');
                     setError('');
                     setPassword('');
+                    setConfirmPassword('');
                   }}
                   className="text-sm text-primary hover:underline"
                 >
                   {mode === 'signup' || mode === 'reset'
-                    ? '¿Ya tienes cuenta? Inicia sesión' 
-                    : '¿No tienes cuenta? Regístrate'}
+                    ? t('have_account')
+                    : t('no_account')}
                 </button>
               </div>
             )}
@@ -255,7 +274,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          ¿Problemas para entrar? Contacta a tu administrador.
+          {t('problems')}
         </p>
       </div>
     </div>

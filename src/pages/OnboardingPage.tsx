@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Package, MapPin, Navigation, X } from "lucide-react";
+import { t, getLocale, formatCoordinates } from "@/lib/i18n";
 
 export default function OnboardingPage() {
   const [orgName, setOrgName] = useState("");
@@ -19,11 +20,12 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
+  const locale = getLocale();
 
   // Get current location
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError("Geolocation no disponible en tu navegador");
+      setLocationError(locale === 'es' ? "Geolocation no disponible en tu navegador" : "Geolocation not available in your browser");
       return;
     }
 
@@ -37,12 +39,11 @@ export default function OnboardingPage() {
           lng: position.coords.longitude,
         });
         setUseDeviceLocation(true);
-        // Auto-fill location name with coordinates
-        setLocationName(`Location (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`);
+        setLocationName(formatCoordinates(position.coords.latitude, position.coords.longitude));
         setLocationLoading(false);
       },
       (err) => {
-        setLocationError("No se pudo obtener tu ubicación");
+        setLocationError(locale === 'es' ? "No se pudo obtener tu ubicación" : "Could not get your location");
         setLocationLoading(false);
       }
     );
@@ -57,12 +58,12 @@ export default function OnboardingPage() {
 
   const handleGetStarted = async () => {
     if (!orgName.trim()) {
-      setError("Por favor ingresa el nombre de tu restaurante");
+      setError(t('error_restaurant_required'));
       return;
     }
     
     if (!user) {
-      setError("Error: Usuario no autenticado");
+      setError(t('error_auth'));
       return;
     }
 
@@ -106,7 +107,7 @@ export default function OnboardingPage() {
         .insert({
           user_id: user.id,
           organization_id: org.id,
-          location_id: null, // OWNER has access to all locations
+          location_id: null,
           role: "OWNER",
         });
 
@@ -116,7 +117,7 @@ export default function OnboardingPage() {
       navigate("/app/owner");
     } catch (err: any) {
       console.error("Onboarding error:", err);
-      setError(err.message || "Error al crear la organización");
+      setError(t('error_creating'));
     } finally {
       setLoading(false);
     }
@@ -127,23 +128,23 @@ export default function OnboardingPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-green-800">
-            Welcome to Restocka
+            {t('welcome')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-center text-gray-600">
-            Let's get you set up with your restaurant inventory management.
+            {t('setup_subtitle')}
           </p>
 
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="orgName" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Restaurant Name *
+                {t('restaurant_name')}
               </Label>
               <Input
                 id="orgName"
-                placeholder="Mi Restaurante"
+                placeholder={t('restaurant_placeholder')}
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 disabled={loading}
@@ -153,11 +154,11 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label htmlFor="locationName" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Location (optional)
+                {t('location_optional')}
               </Label>
               <Input
                 id="locationName"
-                placeholder="Main Branch"
+                placeholder={t('location_placeholder')}
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 disabled={loading}
@@ -168,13 +169,13 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Navigation className="h-4 w-4" />
-                Use Device Location
+                {t('use_device_location')}
               </Label>
               
               {useDeviceLocation && locationCoords ? (
                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex-1 text-sm text-green-700">
-                    📍 {locationCoords.lat.toFixed(5)}, {locationCoords.lng.toFixed(5)}
+                    📍 {formatCoordinates(locationCoords.lat, locationCoords.lng)}
                   </div>
                   <Button 
                     variant="ghost" 
@@ -196,12 +197,12 @@ export default function OnboardingPage() {
                   {locationLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Obteniendo ubicación...
+                      {t('getting_location')}
                     </>
                   ) : (
                     <>
                       <Navigation className="h-4 w-4 mr-2" />
-                      Share Location
+                      {t('share_location')}
                     </>
                   )}
                 </Button>
@@ -212,7 +213,7 @@ export default function OnboardingPage() {
               )}
               
               <p className="text-xs text-muted-foreground">
-                Share your device location to automatically set up your restaurant's coordinates.
+                {t('location_permission')}
               </p>
             </div>
 
@@ -229,10 +230,10 @@ export default function OnboardingPage() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creando...
+                  {t('creating')}
                 </>
               ) : (
-                "Get Started"
+                t('get_started')
               )}
             </Button>
           </div>
