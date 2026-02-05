@@ -5,8 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Mail, Lock, Loader2, CheckCircle } from 'lucide-react';
+import { Package, Loader2, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 import { t, getLocale } from '@/lib/i18n';
 
@@ -117,163 +116,160 @@ export default function LoginPage() {
     }
   };
 
-  const getDescription = () => {
-    switch (mode) {
-      case 'signup': return t('signup_description');
-      case 'reset': return t('reset_description');
-      case 'reset-sent': return t('check_email');
-      default: return t('login_description');
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md animate-fade-in">
+      {/* Animated background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
+      </div>
+
+      <div className="w-full max-w-md animate-fadeIn">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-            <Package className="h-8 w-8 text-primary-foreground" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/20 glow-green">
+            <Package className="h-8 w-8 text-black" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">ReStocka</h1>
-          <p className="mt-1 text-muted-foreground">{locale === 'es' ? 'Control de inventario simple' : 'Simple inventory control'}</p>
+          <h1 className="text-3xl font-bold text-gradient">Restocka</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {locale === 'es' ? 'Control de inventario simple' : 'Simple inventory control'}
+          </p>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">{getTitle()}</CardTitle>
-            <CardDescription>{getDescription()}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {mode === 'reset-sent' ? (
-              <div className="text-center py-4">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <CheckCircle className="h-6 w-6 text-primary" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {locale === 'es' ? `Revisa tu correo ${email}` : `Check your email ${email}`}
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => setMode('login')}
-                  className="w-full"
-                >
-                  {t('back_to_login')}
-                </Button>
+        {/* Glass card */}
+        <div className="glass-card p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-semibold text-foreground">{getTitle()}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {mode === 'signup' 
+                ? locale === 'es' ? 'Crea tu cuenta' : 'Create your account'
+                : mode === 'reset' 
+                  ? locale === 'es' ? 'Recibe un enlace para恢复密码' : 'Receive a link to reset your password'
+                  : locale === 'es' ? 'Ingresa a tu cuenta' : 'Sign in to your account'
+              }
+            </p>
+          </div>
+
+          {mode === 'reset-sent' ? (
+            <div className="text-center py-4">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
+                <CheckCircle className="h-6 w-6 text-green-400" />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                {locale === 'es' ? `Revisa tu correo ${email}` : `Check your email ${email}`}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setMode('login')}
+                className="w-full glass"
+              >
+                {t('back_to_login')}
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground">{t('email')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t('email_placeholder')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              {mode !== 'reset' && (
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('email')}</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder={t('email_placeholder')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                      autoComplete="email"
-                    />
-                  </div>
+                  <Label htmlFor="password" className="text-foreground">{t('password')}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder={t('password_placeholder')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                    required
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  />
                 </div>
+              )}
 
-                {mode !== 'reset' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="password">{t('password')}</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder={t('password_placeholder')}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                        autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                      />
-                    </div>
-                  </div>
+              {mode === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-foreground">{t('confirm_password')}</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder={t('password_placeholder')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+              )}
+
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-semibold"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    {mode === 'signup' ? t('creating_account') : mode === 'reset' ? t('sending_link') : t('signing_in')}
+                  </>
+                ) : (
+                  mode === 'signup' ? t('signup') : mode === 'reset' ? t('send_link') : t('login')
                 )}
+              </Button>
 
-                {mode === 'signup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">{t('confirm_password')}</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder={t('password_placeholder')}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                        autoComplete="new-password"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {error && (
-                  <p className="text-sm text-destructive">{error}</p>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {mode === 'signup' ? t('creating_account') : mode === 'reset' ? t('sending_link') : t('signing_in')}
-                    </>
-                  ) : (
-                    mode === 'signup' ? t('signup') : mode === 'reset' ? t('send_link') : t('login')
-                  )}
-                </Button>
-
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('reset');
-                      setError('');
-                    }}
-                    className="w-full text-sm text-muted-foreground hover:text-primary hover:underline"
-                  >
-                    {t('forgot_password')}
-                  </button>
-                )}
-              </form>
-            )}
-
-            {mode !== 'reset-sent' && (
-              <div className="mt-4 text-center">
+              {mode === 'login' && (
                 <button
                   type="button"
                   onClick={() => {
-                    setMode(mode === 'login' ? 'signup' : 'login');
+                    setMode('reset');
                     setError('');
-                    setPassword('');
-                    setConfirmPassword('');
                   }}
-                  className="text-sm text-primary hover:underline"
+                  className="w-full text-sm text-muted-foreground hover:text-green-400 transition-colors"
                 >
-                  {mode === 'signup' || mode === 'reset'
-                    ? t('have_account')
-                    : t('no_account')}
+                  {t('forgot_password')}
                 </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </form>
+          )}
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+          {mode !== 'reset-sent' && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === 'login' ? 'signup' : 'login');
+                  setError('');
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+                className="text-sm text-green-400 hover:text-green-300 transition-colors"
+              >
+                {mode === 'signup' || mode === 'reset'
+                  ? t('have_account')
+                  : t('no_account')}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           {t('problems')}
         </p>
       </div>

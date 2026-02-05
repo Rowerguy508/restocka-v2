@@ -155,34 +155,41 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-background">
+      {/* Animated background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(34,197,94,0.05)_25%,rgba(34,197,94,0.05)_26%,transparent_27%,transparent_74%,rgba(34,197,94,0.05)_75%,rgba(34,197,94,0.05)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(34,197,94,0.05)_25%,rgba(34,197,94,0.05)_26%,transparent_27%,transparent_74%,rgba(34,197,94,0.05)_75%,rgba(34,197,94,0.05)_76%,transparent_77%,transparent)] [background-size:50px_50px]" />
+      </div>
+
       {/* Navigation */}
-      <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="h-10 w-10 bg-green-600 rounded-xl flex items-center justify-center">
+      <nav className="container mx-auto px-4 py-4 flex items-center justify-between relative z-10">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
             <span className="text-white font-bold text-xl">R</span>
           </div>
-          <span className="text-2xl font-bold text-gray-900">ReStocka</span>
+          <span className="text-2xl font-bold text-gradient">ReStocka</span>
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-gray-600 hover:text-green-600 transition-colors">
+          <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
             {t.nav_features}
           </a>
-          <a href="#benefits" className="text-gray-600 hover:text-green-600 transition-colors">
+          <a href="#benefits" className="text-muted-foreground hover:text-foreground transition-colors">
             {t.nav_benefits}
           </a>
-          <a href="#pricing" className="text-gray-600 hover:text-green-600 transition-colors">
+          <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
             {t.nav_pricing}
           </a>
           <Link to="/login">
-            <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+            <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
               {t.login}
             </Button>
           </Link>
           <Link to="/login?signup=true">
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-semibold">
               {t.get_started}
             </Button>
           </Link>
@@ -190,7 +197,7 @@ export default function Index() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden"
+          className="md:hidden text-foreground"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X /> : <Menu />}
@@ -199,64 +206,64 @@ export default function Index() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t p-4 space-y-4">
-          <a href="#features" className="block py-2 text-gray-600">{t.nav_features}</a>
-          <a href="#benefits" className="block py-2 text-gray-600">{t.nav_benefits}</a>
-          <a href="#pricing" className="block py-2 text-gray-600">{t.nav_pricing}</a>
-          <Link to="/login" className="block py-2 text-green-600 font-medium">{t.login}</Link>
+        <div className="md:hidden glass-card mx-4 mb-4 p-4 space-y-4 relative z-10">
+          <a href="#features" className="block py-2 text-muted-foreground">{t.nav_features}</a>
+          <a href="#benefits" className="block py-2 text-muted-foreground">{t.nav_benefits}</a>
+          <a href="#pricing" className="block py-2 text-muted-foreground">{t.nav_pricing}</a>
+          <Link to="/login" className="block py-2 text-green-400 font-medium">{t.login}</Link>
           <Link to="/login?signup=true" className="block">
-            <Button className="w-full bg-green-600 hover:bg-green-700">{t.get_started}</Button>
+            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black">{t.get_started}</Button>
           </Link>
         </div>
       )}
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+      <section className="container mx-auto px-4 py-20 text-center relative z-10">
+        <div className="max-w-4xl mx-auto animate-fadeIn">
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
             {t.hero_title}{' '}
-            <span className="text-green-600">{t.hero_title_green}</span>
+            <span className="text-gradient">{t.hero_title_green}</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             {t.hero_subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login?signup=true">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-lg px-8">
+              <Button size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-lg px-8 text-black font-semibold glow-green">
                 {t.get_started}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-green-600 text-green-600 hover:bg-green-50">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 text-foreground hover:bg-white/10">
                 {t.see_demo}
               </Button>
             </Link>
           </div>
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-muted-foreground">
             {t.no_credit_card}
           </p>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="bg-gray-50 py-20">
+      <section id="features" className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
             {t.nav_features}
           </h2>
-          <p className="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
             Powerful but simple tools. Focused on what really matters.
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature) => (
-              <div key={feature.title} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-green-600" />
+              <div key={feature.title} className="glass-card p-6 hover-lift">
+                <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500/20 to-cyan-500/20 flex items-center justify-center mb-4 border border-white/10">
+                  <feature.icon className="h-6 w-6 text-green-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -264,37 +271,37 @@ export default function Index() {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-20">
+      <section id="benefits" className="py-20 relative z-10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
                 Why Restaurants Choose ReStocka?
               </h2>
               <ul className="space-y-4">
                 {benefits.map((benefit) => (
                   <li key={benefit} className="flex items-start gap-3">
-                    <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">{benefit}</span>
+                    <CheckCircle className="h-6 w-6 text-green-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">{benefit}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-8">
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h4 className="font-semibold text-gray-900 mb-4">Dashboard Example</h4>
+            <div className="glass-card p-8">
+              <div className="rounded-xl bg-gradient-to-br from-green-500/10 to-cyan-500/10 p-6 border border-white/10">
+                <h4 className="font-semibold text-foreground mb-4">Dashboard Example</h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Active products</span>
-                    <span className="font-semibold">127</span>
+                  <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                    <span className="text-sm text-muted-foreground">Active products</span>
+                    <span className="font-semibold text-foreground">127</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                    <span className="text-sm text-red-600">Low stock</span>
-                    <span className="font-semibold text-red-600">8</span>
+                  <div className="flex justify-between items-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                    <span className="text-sm text-red-400">Low stock</span>
+                    <span className="font-semibold text-red-400">8</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-sm text-green-600">Active orders</span>
-                    <span className="font-semibold text-green-600">3</span>
+                  <div className="flex justify-between items-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <span className="text-sm text-green-400">Active orders</span>
+                    <span className="font-semibold text-green-400">3</span>
                   </div>
                 </div>
               </div>
@@ -304,49 +311,52 @@ export default function Index() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="bg-gray-50 py-20">
+      <section id="pricing" className="py-20 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
             {pricing.title}
           </h2>
-          <p className="text-xl text-gray-600 mb-12">
+          <p className="text-xl text-muted-foreground mb-12">
             {pricing.subtitle}
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="text-xl font-semibold mb-2">{pricing.free.name}</h3>
-              <div className="text-4xl font-bold mb-4">{pricing.free.price}<span className="text-lg text-gray-500">/mo</span></div>
-              <ul className="space-y-2 text-sm text-gray-600 mb-6">
+            <div className="glass-card p-6 hover-lift">
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{pricing.free.name}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{pricing.free.price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                 {pricing.free.features.map(f => <li key={f}>• {f}</li>)}
               </ul>
               <Link to="/login?signup=true" className="block">
-                <Button className="w-full" variant="outline">{t.get_started}</Button>
+                <Button className="w-full border-white/20 text-foreground hover:bg-white/10">{t.get_started}</Button>
               </Link>
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-green-600 p-6 rounded-xl shadow-lg transform scale-105">
-              <h3 className="text-xl font-semibold mb-2 text-white">{pricing.pro.name}</h3>
-              <div className="text-4xl font-bold mb-4 text-white">{pricing.pro.price}<span className="text-lg text-green-200">/mo</span></div>
-              <ul className="space-y-2 text-sm text-green-100 mb-6">
+            <div className="glass-card p-6 glow-green border-green-500/30 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-green-400">{pricing.pro.name}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{pricing.pro.price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                 {pricing.pro.features.map(f => <li key={f}>• {f}</li>)}
               </ul>
               <Link to="/login?signup=true&plan=pro" className="block">
-                <Button className="w-full bg-white text-green-600 hover:bg-gray-100">Upgrade</Button>
+                <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black font-semibold">Upgrade</Button>
               </Link>
             </div>
 
             {/* Enterprise */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="text-xl font-semibold mb-2">{pricing.enterprise.name}</h3>
-              <div className="text-4xl font-bold mb-4">{pricing.enterprise.price}<span className="text-lg text-gray-500">/mo</span></div>
-              <ul className="space-y-2 text-sm text-gray-600 mb-6">
+            <div className="glass-card p-6 hover-lift">
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{pricing.enterprise.name}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{pricing.enterprise.price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                 {pricing.enterprise.features.map(f => <li key={f}>• {f}</li>)}
               </ul>
               <Link to="/login" className="block">
-                <Button className="w-full" variant="outline">Contact</Button>
+                <Button className="w-full border-white/20 text-foreground hover:bg-white/10">Contact</Button>
               </Link>
             </div>
           </div>
@@ -354,34 +364,36 @@ export default function Index() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {t.cta_title}
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            {t.cta_subtitle}
-          </p>
-          <Link to="/login?signup=true">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700 text-lg px-12">
-              {t.cta_button}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <div className="glass-card p-12 max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              {t.cta_title}
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              {t.cta_subtitle}
+            </p>
+            <Link to="/login?signup=true">
+              <Button size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-lg px-12 text-black font-semibold glow-green">
+                {t.cta_button}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-[hsl(var(--sidebar-bg))]/50 border-t border-white/5 py-12 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
                 <span className="text-white font-bold">R</span>
               </div>
               <span className="text-white font-semibold">ReStocka</span>
             </div>
-            <div className="text-sm">
+            <div className="text-sm text-muted-foreground">
               {t.footer}
             </div>
           </div>

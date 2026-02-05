@@ -3,13 +3,12 @@ import { cn } from "@/lib/cn"
 import {
   LayoutDashboard,
   Package,
-  Users,
   FileText,
+  Users,
   Truck,
   Plug,
   MapPin,
   Settings,
-  Menu
 } from "lucide-react"
 
 const ownerLinks = [
@@ -28,10 +27,16 @@ export function OwnerSidebar() {
   const location = useLocation()
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <span className="text-xl font-bold">Restocka</span>
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r/50 bg-sidebar/80 backdrop-blur-xl">
+      {/* Logo */}
+      <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/20">
+          <span className="text-lg font-bold text-white">R</span>
+        </div>
+        <span className="text-xl font-bold text-gradient">Restocka</span>
       </div>
+      
+      {/* Navigation */}
       <nav className="space-y-1 p-4">
         {ownerLinks.map((link) => {
           const Icon = link.icon
@@ -41,18 +46,29 @@ export function OwnerSidebar() {
               key={link.to}
               to={link.to}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  ? "bg-primary/10 text-primary shadow-lg shadow-primary/10 border border-primary/20"
+                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground hover-lift"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
               {link.label}
             </Link>
           )
         })}
       </nav>
+
+      {/* Bottom section */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <div className="rounded-lg bg-gradient-to-br from-green-500/10 to-cyan-500/10 p-4 border border-white/5">
+          <p className="text-xs text-muted-foreground mb-2">Pro Plan</p>
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold text-foreground">$29</span>
+            <span className="text-xs text-muted-foreground">/month</span>
+          </div>
+        </div>
+      </div>
     </aside>
   )
 }
