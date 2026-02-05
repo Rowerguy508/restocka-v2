@@ -96,10 +96,18 @@ function SubdomainRouter({ children }: { children: React.ReactNode }) {
 function LandingRoutes() {
   const { user } = useAuth();
 
+  if (user) {
+    return (
+      <Routes>
+        <Route path="*" element={<Navigate to="/app" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/login" element={<user ? <Navigate to="/app" replace /> : <LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -110,10 +118,18 @@ function LandingRoutes() {
 function LoginRoutes() {
   const { user } = useAuth();
 
+  if (user) {
+    return (
+      <Routes>
+        <Route path="*" element={<Navigate to="/app" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<user ? <Navigate to="/app" replace /> : <LoginPage />} />
-      <Route path="/login" element={<user ? <Navigate to="/app" replace /> : <LoginPage />} />
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
