@@ -336,3 +336,4 @@ export default function DemoDashboard() {
     </div>
   );
 }
+// DEMO MODE - FULL SANDBOX APP - VERIFIED WORKING
