@@ -24,6 +24,18 @@ const TRANSLATIONS = {
     hero_title_green: 'Restaurants',
     hero_subtitle: 'The simplest way to manage your inventory. Smart alerts, automatic orders, and your team always informed.',
     
+    pricing_title: 'Simple Pricing',
+    pricing_subtitle: 'Start free, scale when you need',
+    pricing_free: 'Free',
+    pricing_free_price: '$0',
+    pricing_free_features: ['Up to 100 products', '1 location', 'Basic alerts'],
+    pricing_pro: 'Pro',
+    pricing_pro_price: '$29',
+    pricing_pro_features: ['Unlimited products', 'Up to 5 locations', 'AI predictions', 'Priority support'],
+    pricing_enterprise: 'Enterprise',
+    pricing_enterprise_price: '$99',
+    pricing_enterprise_features: ['Unlimited locations', 'Multi-user teams', 'API access', 'Dedicated support'],
+    
     cta_title: 'Ready to simplify your inventory?',
     cta_subtitle: 'Join hundreds of restaurants already using ReStocka',
     cta_button: 'Create Free Account',
@@ -42,6 +54,18 @@ const TRANSLATIONS = {
     hero_title: 'Control de Inventario para',
     hero_title_green: 'Restaurantes',
     hero_subtitle: 'La forma más simple de gestionar tu inventario. Alertas automáticas, pedidos inteligentes, y tu equipo siempre informado.',
+    
+    pricing_title: 'Precios Simples',
+    pricing_subtitle: 'Empieza gratis, escala cuando necesites',
+    pricing_free: 'Gratis',
+    pricing_free_price: '$0',
+    pricing_free_features: ['Hasta 100 productos', '1 ubicación', 'Alertas básicas'],
+    pricing_pro: 'Pro',
+    pricing_pro_price: '$29',
+    pricing_pro_features: ['Productos ilimitados', 'Hasta 5 ubicaciones', 'Predicciones AI', 'Soporte prioritario'],
+    pricing_enterprise: 'Enterprise',
+    pricing_enterprise_price: '$99',
+    pricing_enterprise_features: ['Ubicaciones ilimitadas', 'Equipos multi-usuario', 'API access', 'Soporte dedicado'],
     
     cta_title: '¿Listo para simplificar tu inventario?',
     cta_subtitle: 'Únete a cientos de restaurantes que ya usan ReStocka',
@@ -271,6 +295,59 @@ export default function Index() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 relative z-10">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+            {t.pricing_title}
+          </h2>
+          <p className="text-xl text-muted-foreground mb-12">
+            {t.pricing_subtitle}
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Free Plan */}
+            <div className="bg-card border border-border p-6 rounded-xl hover-lift">
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{t.pricing_free}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{t.pricing_free_price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                {t.pricing_free_features.map((f: string) => <li key={f}>• {f}</li>)}
+              </ul>
+              <Link to="/login?signup=true" className="block">
+                <Button className="w-full border-white/20 hover:bg-white/10">{t.get_started}</Button>
+              </Link>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="bg-card border border-green-500/30 p-6 rounded-xl relative glow-green">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-green-400">{t.pricing_pro}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{t.pricing_pro_price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                {t.pricing_pro_features.map((f: string) => <li key={f}>• {f}</li>)}
+              </ul>
+              <Link to="/login?signup=true&plan=pro" className="block">
+                <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black font-semibold">Upgrade</Button>
+              </Link>
+            </div>
+
+            {/* Enterprise */}
+            <div className="bg-card border border-border p-6 rounded-xl hover-lift">
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{t.pricing_enterprise}</h3>
+              <div className="text-4xl font-bold mb-4 text-foreground">{t.pricing_enterprise_price}<span className="text-lg text-muted-foreground">/mo</span></div>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                {t.pricing_enterprise_features.map((f: string) => <li key={f}>• {f}</li>)}
+              </ul>
+              <Link to="/login" className="block">
+                <Button className="w-full border-white/20 hover:bg-white/10">Contact</Button>
+              </Link>
             </div>
           </div>
         </div>
