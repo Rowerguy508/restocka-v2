@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +29,36 @@ import ManagerDashboard from "./pages/manager/ManagerDashboard";
 import { OwnerLayout } from "@/components/layout/OwnerLayout";
 
 const queryClient = new QueryClient();
+
+// Component to handle initial loading state (fixes blank screen on mobile)
+function LoadingScreen() {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      backgroundColor: 'rgb(15, 19, 26)',
+      color: 'white'
+    }}>
+      <div style={{
+        width: 40,
+        height: 40,
+        border: '3px solid rgba(255,255,255,0.1)',
+        borderTopColor: '#16a34a',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+      }} />
+      <p style={{ marginTop: 16, opacity: 0.8 }}>Loading ReStocka...</p>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 // Component to enforce subdomain-based redirects
 function SubdomainEnforcer() {
@@ -164,6 +194,17 @@ function AppRoutes() {
 
 const App = () => {
   const mode = useMemo(() => getAppMode(), []);
+  const [supabaseInitialized, setSupabaseInitialized] = useState(false);
+
+  // Check if Supabase is initialized before rendering routes
+  useEffect(() => {
+    // Give Supabase a moment to initialize
+    const checkSupabase = setTimeout(() => {
+      setSupabaseInitialized(true);
+    }, 500);
+
+    return () => clearTimeout(checkSupabase);
+  }, []);
 
   const RoutesComponent = useMemo(() => {
     switch (mode) {
@@ -175,6 +216,11 @@ const App = () => {
         return LandingRoutes;
     }
   }, [mode]);
+
+  // Show loading screen while Supabase initializes (fixes blank screen on mobile)
+  if (!supabaseInitialized) {
+    return <LoadingScreen />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

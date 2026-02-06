@@ -8,6 +8,18 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY |
 // Validate environment variables before creating client
 const isValidConfig = SUPABASE_URL.length > 0 && SUPABASE_PUBLISHABLE_KEY.length > 0;
 
+// Safe localStorage wrapper for mobile Safari Private Browsing compatibility
+let safeStorage: Storage | null = null;
+try {
+  safeStorage = localStorage;
+  // Test if localStorage actually works (mobile Safari may throw)
+  safeStorage.setItem('__test__', 'test');
+  safeStorage.removeItem('__test__');
+} catch (e) {
+  console.warn('localStorage unavailable (Private Browsing?), using memory fallback');
+  safeStorage = null;
+}
+
 // Create client only if config is valid, otherwise create a placeholder
 let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
 
@@ -15,9 +27,10 @@ if (isValidConfig) {
   try {
     supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       auth: {
-        storage: localStorage,
-        persistSession: true,
+        storage: safeStorage || undefined,
+        persistSession: safeStorage !== null,
         autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
     });
   } catch (error) {
