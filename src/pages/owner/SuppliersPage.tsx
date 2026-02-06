@@ -19,8 +19,11 @@ import { Plus, Pencil, Trash2, Loader2, Truck, Phone, Mail, Clock } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import type { Supplier } from '@/types/database';
 
+import { useLocationContext } from '@/contexts/LocationContext';
+
 export default function SuppliersPage() {
   const { membership } = useAuth();
+  const { activeLocation } = useLocationContext();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -30,14 +33,15 @@ export default function SuppliersPage() {
 
   const [formData, setFormData] = useState({
     name: '',
+    rnc: '',
     whatsapp_phone: '',
     email: '',
     lead_time_hours: 24,
   });
 
   useEffect(() => {
-    fetchSuppliers();
-  }, [membership]);
+    if (activeLocation?.id) fetchSuppliers();
+  }, [activeLocation]);
 
   const fetchSuppliers = async () => {
     if (!membership?.organization_id) return;
@@ -47,7 +51,7 @@ export default function SuppliersPage() {
       const { data, error } = await supabase
         .from('suppliers')
         .select('*')
-        .eq('organization_id', membership.organization_id)
+        .eq('location_id', activeLocation?.id)
         .order('name');
 
       if (error) throw error;
@@ -64,13 +68,14 @@ export default function SuppliersPage() {
       setEditingSupplier(supplier);
       setFormData({
         name: supplier.name,
+        rnc: (supplier as any).rnc || '',
         whatsapp_phone: supplier.whatsapp_phone || '',
         email: supplier.email || '',
         lead_time_hours: supplier.lead_time_hours,
       });
     } else {
       setEditingSupplier(null);
-      setFormData({ name: '', whatsapp_phone: '', email: '', lead_time_hours: 24 });
+      setFormData({ name: '', rnc: '', whatsapp_phone: '', email: '', lead_time_hours: 24 });
     }
     setDialogOpen(true);
   };
@@ -86,6 +91,7 @@ export default function SuppliersPage() {
     try {
       const payload = {
         name: formData.name.trim(),
+        rnc: formData.rnc.trim() || null,
         whatsapp_phone: formData.whatsapp_phone.trim() || null,
         email: formData.email.trim() || null,
         lead_time_hours: formData.lead_time_hours,
@@ -99,6 +105,7 @@ export default function SuppliersPage() {
         const { error } = await supabase.from('suppliers').insert({
           ...payload,
           organization_id: membership?.organization_id,
+          location_id: activeLocation?.id,
         });
         if (error) throw error;
         toast({ title: 'Suplidor creado' });
@@ -111,6 +118,27 @@ export default function SuppliersPage() {
       toast({ title: 'Error', description: 'No se pudo guardar', variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const handleRncLookup = async () => {
+    if (!formData.rnc.trim()) return;
+    setLookupLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('dr-lookup', {
+        body: { action: 'rnc-lookup', rnc: formData.rnc.trim() }
+      });
+      if (error) throw error;
+      if (data && data.name) {
+        setFormData({ ...formData, name: data.name });
+        toast({ title: '¡Éxito!', description: `Encontrado: ${data.name}` });
+      }
+    } catch (err: any) {
+      console.error('RNC Lookup error:', err);
+      toast({ title: 'Error', description: 'No se encontró el RNC o el servicio no está disponible', variant: 'destructive' });
+    } finally {
+      setLookupLoading(false);
     }
   };
 
@@ -151,6 +179,26 @@ export default function SuppliersPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rnc">RNC (Cédula)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="rnc"
+                      value={formData.rnc}
+                      onChange={(e) => setFormData({ ...formData, rnc: e.target.value })}
+                      placeholder="Ej: 130002305"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRncLookup}
+                      disabled={lookupLoading || !formData.rnc}
+                    >
+                      {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Auto-completar'}
+                    </Button>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre *</Label>
                   <Input

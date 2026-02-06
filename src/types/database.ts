@@ -20,8 +20,7 @@ export interface Location {
   organization_id: string;
   name: string;
   address?: string;
-  latitude?: number;
-  longitude?: number;
+  timezone?: string;
   created_at: string;
 }
 
@@ -152,4 +151,17 @@ export interface ManagerDashboardItem {
   current_qty: number;
   unit: string;
   status: StockStatus;
+}
+
+export type IntegrationProvider = 'WHATSAPP' | 'UBER_EATS' | 'PEDIDOS_YA' | 'PRICESMART';
+export type IntegrationStatus = 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
+
+export interface Integration {
+  id: string;
+  organization_id: string;
+  location_id: string;
+  provider: IntegrationProvider;
+  status: IntegrationStatus;
+  settings: Record<string, any>;
+  created_at: string;
 }

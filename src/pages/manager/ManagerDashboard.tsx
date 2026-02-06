@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Loader2,
   Package,
+  Store,
   ShoppingCart,
   CheckCircle,
   AlertTriangle,
@@ -40,7 +41,7 @@ export default function ManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [stockItems, setStockItems] = useState<ManagerDashboardItem[]>([]);
   const [openOrders, setOpenOrders] = useState<OpenOrder[]>([]);
-  
+
   // Delivery confirmation
   const [confirmingOrder, setConfirmingOrder] = useState<OpenOrder | null>(null);
   const [deliveryData, setDeliveryData] = useState({
@@ -60,7 +61,10 @@ export default function ManagerDashboard() {
   }, [membership]);
 
   const fetchDashboardData = async () => {
-    if (!membership?.location_id) return;
+    if (!membership?.location_id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -215,6 +219,21 @@ export default function ManagerDashboard() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : !membership?.location_id ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="rounded-full bg-muted p-4 mb-4">
+                <Store className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold">Sin Ubicación Asignada</h2>
+              <p className="text-muted-foreground max-w-sm mt-2">
+                Ya eres parte del equipo, pero el dueño aún no te ha asignado una sucursal.
+              </p>
+              <p className="text-sm text-muted-foreground mt-4 italic">
+                Contacta al administrador para que te asigne una ubicación.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <>
             {/* Stock Status */}
@@ -279,7 +298,7 @@ export default function ManagerDashboard() {
                           </div>
                           <POStatusBadge status={order.status} />
                         </div>
-                        
+
                         {order.items && order.items.length > 0 && (
                           <div className="text-sm text-muted-foreground mb-3">
                             {order.items.slice(0, 3).map((item: any, i) => (

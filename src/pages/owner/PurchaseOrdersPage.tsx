@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { PurchaseOrder, PurchaseOrderItem, Supplier } from '@/types/database';
 
 interface OrderWithDetails extends PurchaseOrder {
-  supplier?: { id: string; name: string; whatsapp_phone: string | null };
+  sent_at?: string;
+  supplier?: { id: string; name: string; whatsapp_phone: string | null; lead_time_hours?: number };
   items?: Array<{
     id: string;
     quantity: number;
@@ -40,7 +41,7 @@ export default function PurchaseOrdersPage() {
         .from('purchase_orders')
         .select(`
           *,
-          supplier:supplier_id (id, name, whatsapp_phone),
+          supplier:supplier_id (id, name, whatsapp_phone, lead_time_hours),
           items:purchase_order_items (
             id, quantity, unit_price,
             product:product_id (id, name, unit)
@@ -61,7 +62,7 @@ export default function PurchaseOrdersPage() {
   const copyWhatsAppMessage = async (order: OrderWithDetails) => {
     // Generate message or use existing one
     const message = order.whatsapp_message || generateOrderMessage(order);
-    
+
     try {
       await navigator.clipboard.writeText(message);
       setCopiedId(order.id);
@@ -75,7 +76,7 @@ export default function PurchaseOrdersPage() {
   const generateOrderMessage = (order: OrderWithDetails): string => {
     // TODO: This template could come from backend
     let message = `🛒 *Pedido #${order.id.slice(0, 8)}*\n\n`;
-    
+
     if (order.items && order.items.length > 0) {
       message += `*Productos:*\n`;
       order.items.forEach((item: any) => {
@@ -144,6 +145,14 @@ export default function PurchaseOrdersPage() {
                       <>
                         <span>•</span>
                         <span>{order.supplier.name}</span>
+                      </>
+                    )}
+                    {order.status === 'SENT' && order.sent_at && order.supplier?.lead_time_hours && (
+                      <>
+                        <span>•</span>
+                        <span className={`font-medium ${new Date() > new Date(new Date(order.sent_at).getTime() + order.supplier.lead_time_hours * 60 * 60 * 1000) ? 'text-status-danger' : 'text-blue-600'}`}>
+                          Entrega esperada: {new Date(new Date(order.sent_at).getTime() + order.supplier.lead_time_hours * 60 * 60 * 1000).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </>
                     )}
                     {order.total_amount && (

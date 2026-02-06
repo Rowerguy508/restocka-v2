@@ -11,6 +11,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshRole: () => Promise<void>;
+  error: Error | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,149 +22,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  // If supabase client is not initialized, show demo mode
-  const isDemoMode = !supabase;
-  
-  console.log('[AuthContext] isDemoMode:', isDemoMode, 'supabase:', !!supabase);
+  const [error, setError] = useState<Error | null>(null);
 
   const fetchMembership = async (userId: string) => {
-    if (!supabase) return null;
+    console.log('[Auth] Fetching membership for', userId);
     try {
+      setError(null);
+      // Try standard RLS first
       const { data, error } = await supabase
         .from('memberships')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching membership:', error);
+      console.log('[Auth] RLS Result for membership:', { data, error });
+
+      if (!error && data) {
+        return data as Membership;
+      }
+
+      console.log('[Auth] Membership RLS failed/empty. Trying RPC...');
+      // Fallback: Try RPC if RLS fails (common in new deployments)
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_my_membership');
+      console.log('[Auth] RPC Result:', { rpcData, rpcError });
+
+      if (rpcError) {
+        // Only set error if genuine error, not just "no membership found"
+        if (error) setError(new Error(error.message));
         return null;
       }
-      return data as Membership | null;
-    } catch (err) {
+
+      if (rpcData) {
+        return rpcData as unknown as Membership;
+      }
+
+      return null;
+    } catch (err: any) {
       console.error('Error fetching membership:', err);
+      setError(err);
       return null;
     }
   };
 
   useEffect(() => {
-    // DEMO MODE: Skip auth, create mock user
-    if (isDemoMode) {
-      console.log('[AuthContext] Running in DEMO MODE');
-      setLoading(false);
-      return;
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
 
-    let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
-    console.log('[AuthContext] Starting initialization...');
-
-    const initAuth = async () => {
-      // Safety timeout - force loading to false after 10 seconds
-      timeoutId = setTimeout(() => {
-        if (mounted) {
-          console.warn('[AuthContext] Auth initialization timeout - forcing loading=false');
-          setLoading(false);
-        }
-      }, 10000);
-
-      try {
-        // Set up auth state listener FIRST
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            console.log('[AuthContext] Auth state change:', event, session ? 'with session' : 'no session');
-            if (!mounted) return;
-            
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            // Clear timeout and set loading to false
-            clearTimeout(timeoutId);
-            
-            // Defer membership fetch
-            if (session?.user) {
-              console.log('[AuthContext] User found, fetching membership...');
-              fetchMembership(session.user.id).then(membership => {
-                if (mounted) {
-                  console.log('[AuthContext] Membership:', membership);
-                  setMembership(membership);
-                  setLoading(false);
-                }
-              });
-            } else {
-              setMembership(null);
-              setLoading(false);
-            }
+        if (session?.user) {
+          try {
+            const mem = await fetchMembership(session.user.id);
+            setMembership(mem);
+          } catch (e) {
+            console.error(e);
           }
-        );
-
-        // THEN check for existing session
-        console.log('[AuthContext] Checking for existing session...');
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          console.log('[AuthContext] Existing session:', session ? 'found' : 'none');
-          setSession(session);
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            fetchMembership(session.user.id).then(membership => {
-              if (mounted) {
-                setMembership(membership);
-                setLoading(false);
-              }
-            });
-          } else {
-            setLoading(false);
-          }
+        } else {
+          setMembership(null);
         }
+        setLoading(false);
+      }
+    );
 
-        return () => {
-          mounted = false;
-          clearTimeout(timeoutId);
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('[AuthContext] Init error:', error);
-        if (mounted) {
-          clearTimeout(timeoutId);
-          setAuthError(error instanceof Error ? error.message : 'Auth init failed');
-          setLoading(false);
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('[Auth] Initial session check:', session ? 'Found Session' : 'No Session');
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        try {
+          console.log('[Auth] calling fetchMembership...');
+          const mem = await fetchMembership(session.user.id);
+          console.log('[Auth] fetchMembership done:', mem);
+          setMembership(mem);
+        } catch (e) {
+          console.error('[Auth] Error in initial fetch:', e);
         }
       }
-    };
+      console.log('[Auth] Setting loading = false');
+      setLoading(false);
+    });
 
-    initAuth();
-
-    return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [isDemoMode]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signInWithMagicLink = async (email: string) => {
-    if (!supabase) {
-      return { error: new Error('Supabase not initialized') };
-    }
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app`,
-        },
-      });
-      return { error: error as Error | null };
-    } catch (err) {
-      return { error: err instanceof Error ? err : new Error('Unknown error') };
-    }
+    setError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/app`,
+      },
+    });
+    return { error: error as Error | null };
   };
 
   const signOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+    await supabase.auth.signOut();
     setMembership(null);
+    setError(null);
   };
 
   const value: AuthContextType = {
@@ -171,34 +130,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     membership,
     role: membership?.role ?? null,
     loading,
+    error,
     signInWithMagicLink,
     signOut,
+    refreshRole: async () => {
+      if (user) {
+        setLoading(true);
+        const mem = await fetchMembership(user.id);
+        setMembership(mem);
+        setLoading(false);
+      }
+    },
   };
-
-  if (authError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="glass-card p-8 max-w-md text-center">
-          <h1 className="text-xl font-bold text-red-400 mb-4">Auth Error</h1>
-          <p className="text-muted-foreground mb-4">{authError}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

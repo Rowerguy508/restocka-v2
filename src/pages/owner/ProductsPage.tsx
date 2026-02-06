@@ -16,25 +16,25 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Pencil, Trash2, Loader2, Utensils, Search, Filter } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Plus, Pencil, Trash2, Loader2, Utensils, Search, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/types/database';
 
+import { useLocationContext } from '@/contexts/LocationContext';
+
 export default function ProductsPage() {
   const { membership } = useAuth();
+  const { activeLocation } = useLocationContext();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>(['General']); // Default fallbacks
+  const [units, setUnits] = useState<string[]>(['Unidad']); // Default fallbacks
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -47,8 +47,34 @@ export default function ProductsPage() {
   });
 
   useEffect(() => {
-    fetchProducts();
-  }, [membership]);
+    if (activeLocation?.id) {
+      fetchProducts();
+      fetchSettings();
+    }
+  }, [activeLocation]);
+
+  const fetchSettings = async () => {
+    if (!membership?.organization_id) return;
+    try {
+      const { data } = await supabase
+        .from('organizations')
+        .select('settings')
+        .eq('id', membership.organization_id)
+        .single();
+
+      if ((data as any)?.settings) {
+        const s = (data as any).settings;
+        if (s.product_categories && Array.isArray(s.product_categories)) {
+          setCategories(s.product_categories);
+        }
+        if (s.product_units && Array.isArray(s.product_units)) {
+          setUnits(s.product_units);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading settings", e);
+    }
+  };
 
   const fetchProducts = async () => {
     if (!membership?.organization_id) return;
@@ -58,11 +84,14 @@ export default function ProductsPage() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('organization_id', membership.organization_id)
+        .eq('location_id', activeLocation?.id)
         .order('name');
 
       if (error) throw error;
       setProducts(data || []);
+      // We no longer extract categories from products dynamically, we use the defined Settings list.
+      // However, if we wanted to support "Unknown" categories that exist in data but not settings, we could merge them.
+      // For now, strict adherence to Settings is cleaner.
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({ title: 'Error', description: 'No se pudieron cargar los productos', variant: 'destructive' });
@@ -112,6 +141,7 @@ export default function ProductsPage() {
       } else {
         const { error } = await supabase.from('products').insert({
           organization_id: membership?.organization_id,
+          location_id: activeLocation?.id,
           name: formData.name.trim(),
           unit: formData.unit.trim(),
           category: formData.category.trim() || null,
@@ -146,116 +176,190 @@ export default function ProductsPage() {
     }
   };
 
-  // Get unique categories for filter dropdown
-  const categories = [...new Set(products.map((p) => p.category).filter(Boolean))] as string[];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    setImporting(true);
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+      // Simple validation of headers
+      if (!headers.includes('name')) {
+        toast({ title: 'Error', description: 'El CSV debe tener una columna "name"', variant: 'destructive' });
+        setImporting(false);
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Handle quotes? MVP: Just split by comma
+        const values = line.split(',');
+        const row: any = {};
+
+        headers.forEach((header, index) => {
+          row[header] = values[index]?.trim() || '';
+        });
+
+        if (!row.name) continue;
+
+        try {
+          const { error } = await supabase.from('products').insert({
+            organization_id: membership?.organization_id,
+            location_id: activeLocation?.id,
+            name: row.name,
+            unit: row.unit || 'FALSO_UNIT', // Default or error? Schema is text now.
+            category: row.category || 'General',
+            price_per_unit: parseFloat(row.price) || 0,
+            min_order_quantity: parseInt(row.min) || 5,
+            active: true
+          });
+
+          if (error) throw error;
+          successCount++;
+        } catch (err) {
+          console.error('Row error', err);
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: 'Importación completada',
+        description: `${successCount} productos importados. ${errorCount} errores.`,
+        variant: errorCount > 0 ? 'default' : 'default' // could be destructive if distinct
+      });
+      setImporting(false);
+      setImportDialogOpen(false);
+      fetchProducts();
+    };
+
+    reader.readAsText(file);
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <OwnerLayout>
-      <div className="p-4 lg:p-6 space-y-6 animate-fade-in">
+      <div className="p-4 lg:p-8 space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Productos</h1>
-            <p className="text-muted-foreground">Gestiona los productos de tu inventario</p>
+            <p className="text-muted-foreground">Gestiona tu catálogo de inventario</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => openDialog()} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Nuevo producto
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? 'Editar producto' : 'Nuevo producto'}</DialogTitle>
-                <DialogDescription>
-                  {editingProduct ? 'Modifica los datos del producto' : 'Agrega un nuevo producto al inventario'}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Ej: Arroz"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="unit">Unidad *</Label>
-                  <Input
-                    id="unit"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    placeholder="Ej: libras, unidades, galones"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="Ej: Granos, Lácteos, Carnes"
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch
-                    id="active"
-                    checked={formData.active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                  />
-                  <Label htmlFor="active">Producto activo</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openDialog()} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Nuevo producto
                 </Button>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  {editingProduct ? 'Guardar cambios' : 'Crear producto'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingProduct ? 'Editar producto' : 'Nuevo producto'}</DialogTitle>
+                  <DialogDescription>
+                    {editingProduct ? 'Modifica los datos del producto' : 'Agrega un nuevo producto al inventario'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nombre *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Ej: Arroz"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unit">Unidad *</Label>
+                    <select
+                      id="unit"
+                      className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                      value={formData.unit}
+                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    >
+                      <option value="" disabled>Seleccionar unidad</option>
+                      {units.map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Categoría</Label>
+                    <select
+                      id="category"
+                      className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    >
+                      <option value="" disabled>Seleccionar categoría</option>
+                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      id="active"
+                      checked={formData.active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                    />
+                    <Label htmlFor="active">Producto activo</Label>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {editingProduct ? 'Guardar cambios' : 'Crear producto'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar productos..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {categories.length > 0 && (
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
+          {/* Search */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar productos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="w-full sm:w-[200px]">
+              <select
+                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="all">Todas las categorías</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </SelectContent>
-            </Select>
-          )}
+              </select>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -287,19 +391,42 @@ export default function ProductsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openDialog(product)}>
-                    <Pencil className="h-3 w-3 mr-1" />
+                  <Button variant="outline" size="sm" onClick={() => openDialog(product)} className="flex-1">
+                    <Pencil className="h-3 w-3 mr-2" />
                     Editar
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(product)} className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Eliminar
+                  <Button variant="outline" size="icon" onClick={() => handleDelete(product)} className="text-destructive hover:text-destructive shrink-0">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Import Dialog */}
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Importar Productos</DialogTitle>
+              <DialogDescription>
+                Sube un archivo CSV con las siguientes columnas encabezado:
+                <br />
+                <code className="text-xs bg-muted p-1 rounded">name, unit, category, price, min</code>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                disabled={importing}
+              />
+              {importing && <p className="text-sm text-muted-foreground mt-2">Procesando archivo...</p>}
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </OwnerLayout>
   );
