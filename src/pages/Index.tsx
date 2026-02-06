@@ -71,6 +71,12 @@ const TRANSLATIONS = {
     cta_subtitle: 'Únete a cientos de restaurantes que ya usan ReStocka',
     cta_button: 'Crear Cuenta Gratis',
     
+    demo_title: '🎯 Prueba ReStocka Sin Registrarte',
+    demo_subtitle: 'Explora el panel completo con datos de ejemplo. Sin compromiso.',
+    demo_features: ['12 productos con inventarios reales', 'Alertas de stock bajo', 'Predicciones AI', 'Carrito de pedidos funcional', 'Estadísticas en tiempo real'],
+    demo_cta: 'Ver Demo Ahora',
+    demo_cta_subtitle: 'Tarda menos de 1 minuto',
+    
     footer: '© 2025 ReStocka. Hecho con ❤️ para restaurantes.',
   },
 };
@@ -353,7 +359,41 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Demo Section */}
+      <section className="py-20 relative z-10">
+        <div className="container mx-auto px-4">
+          <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-2xl p-8 max-w-4xl mx-auto border border-green-500/20">
+            <div className="text-center mb-8">
+              <Badge className="mb-4 bg-green-500/20 text-green-400">🎯 DEMO DISPONIBLE</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+                {t.demo_title}
+              </h2>
+              <p className="text-xl text-muted-foreground mb-8">
+                {t.demo_subtitle}
+              </p>
+              <div className="grid md:grid-cols-5 gap-4 mb-8">
+                {t.demo_features.map((f: string) => (
+                  <div key={f} className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/demo">
+                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-lg px-8">
+                  {t.demo_cta}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <p className="text-sm text-muted-foreground mt-4">
+                {t.demo_cta_subtitle}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4 text-center">
           <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-12 max-w-3xl mx-auto border border-green-500/20">
