@@ -186,9 +186,57 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/logout" element={<Navigate to="/" replace />} />
       
-      {/* Catch-all redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all - show something instead of blank */}
+      <Route path="*" element={<FallbackPage />} />
     </Routes>
+  );
+}
+
+// Fallback page when routes don't match
+function FallbackPage() {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-zinc-400">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-bold text-white mb-2">Inicia Sesión</h1>
+          <p className="text-zinc-400 mb-6">Tu sesión ha expirado o no tienes acceso.</p>
+          <a 
+            href="/login" 
+            className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Ir a Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+      <div className="text-center max-w-md">
+        <h1 className="text-2xl font-bold text-white mb-2">Bienvenido a ReStocka</h1>
+        <p className="text-zinc-400 mb-6">Completa tu configuración para comenzar.</p>
+        <a 
+          href="/onboarding" 
+          className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Completar Configuración
+        </a>
+      </div>
+    </div>
   );
 }
 
