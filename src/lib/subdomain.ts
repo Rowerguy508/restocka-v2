@@ -19,13 +19,18 @@ type AppMode = 'landing' | 'login' | 'app';
 const getAppMode = (): AppMode => {
   const hostname = getHostname().toLowerCase();
   
+  console.log('[Subdomain] Hostname:', hostname);
+  
   if (hostname === 'app.restocka.app') {
+    console.log('[Subdomain] Mode: app');
     return 'app';
   }
   if (hostname === 'login.restocka.app') {
+    console.log('[Subdomain] Mode: login');
     return 'login';
   }
   // restocka.app, www.restocka.app, or any other subdomain
+  console.log('[Subdomain] Mode: landing');
   return 'landing';
 };
 
