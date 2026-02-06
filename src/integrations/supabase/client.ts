@@ -8,6 +8,10 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY |
 // Validate environment variables before creating client
 const isValidConfig = SUPABASE_URL.length > 0 && SUPABASE_PUBLISHABLE_KEY.length > 0;
 
+// Log config status for debugging
+console.log('[Supabase] URL set:', !!SUPABASE_URL);
+console.log('[Supabase] Key set:', !!SUPABASE_PUBLISHABLE_KEY);
+
 // Safe localStorage wrapper for mobile Safari Private Browsing compatibility
 let safeStorage: Storage | null = null;
 try {
@@ -16,7 +20,7 @@ try {
   safeStorage.setItem('__test__', 'test');
   safeStorage.removeItem('__test__');
 } catch (e) {
-  console.warn('localStorage unavailable (Private Browsing?), using memory fallback');
+  console.warn('[Supabase] localStorage unavailable (Private Browsing?), using memory fallback');
   safeStorage = null;
 }
 
@@ -33,12 +37,13 @@ if (isValidConfig) {
         detectSessionInUrl: true,
       },
     });
+    console.log('[Supabase] Client created successfully');
   } catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
+    console.error('[Supabase] Failed to initialize Supabase client:', error);
     supabaseInstance = null;
   }
 } else {
-  console.warn('Supabase environment variables missing - app will run in demo mode');
+  console.warn('[Supabase] Environment variables missing - app will run in demo mode');
 }
 
 // Export the client (or null if initialization failed)
