@@ -46,7 +46,20 @@ export default function OwnerDashboard() {
   }, [membership]);
 
   const fetchDashboardData = async () => {
-    if (!membership?.organization_id) return;
+    // Handle new users without membership
+    if (!membership?.organization_id) {
+      // User is logged in but has no organization - show empty state
+      setLoading(false);
+      setLowStockItems([]);
+      setAllStockItems([]);
+      setDraftOrders([]);
+      setAlerts([]);
+      setStockHistory([]);
+      setUsageRates([]);
+      setAiInsights([]);
+      setPredictions([]);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -246,6 +259,20 @@ export default function OwnerDashboard() {
               <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-transparent border-t-primary animate-spin" />
             </div>
             <p className="mt-4 text-muted-foreground">Cargando datos...</p>
+          </div>
+        ) : !membership?.organization_id ? (
+          // New user - no organization yet
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">¡Bienvenido a ReStocka!</h2>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              Tu cuenta está lista. Ahora necesitas crear o unirte a una organización para gestionar tu inventario.
+            </p>
+            <Button onClick={() => window.location.href = '/app/owner/settings'}>
+              Configurar Organización
+            </Button>
           </div>
         ) : (
           <>

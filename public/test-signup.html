@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Test User</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h2>Create Test User for ReStocka</h2>
+    <form id="signup-form">
+        <input type="email" id="email" placeholder="Email" value="owner@test.com" required><br>
+        <input type="password" id="password" placeholder="Password" value="TestPassword123!" required><br>
+        <button type="submit">Create Account</button>
+    </form>
+    <pre id="result"></pre>
+    <script>
+        const SUPABASE_URL = 'https://zsewmpjceuomivvbyjgl.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZXdtcGpjZXVvbWl2dmJ5amdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NzM3MTcsImV4cCI6MjA4MzA0OTcxN30.vPwuXwWTr5VkNz-IR-HxN9qp0A50ncETU0vL4SnrckE';
+        
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            document.getElementById('result').textContent = 'Creating account...';
+            
+            try {
+                const { data, error } = await client.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: 'https://restocka.app/app'
+                    }
+                });
+                
+                if (error) {
+                    document.getElementById('result').textContent = 'Error: ' + error.message;
+                } else {
+                    document.getElementById('result').textContent = 'Success! User created.\nCheck email for confirmation link.\n\nData: ' + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                document.getElementById('result').textContent = 'Error: ' + err.message;
+            }
+        });
+    </script>
+</body>
+</html>
