@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RoleRouter } from "@/components/auth/RoleRouter";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { Analytics } from "@vercel/analytics/react";
 
 // Pages
 import Index from "./pages/Index";
@@ -67,6 +68,7 @@ const App = () => (
           </LocationProvider>
         </AuthProvider>
       </BrowserRouter>
+      <Analytics />
     </TooltipProvider>
   </QueryClientProvider>
 );
