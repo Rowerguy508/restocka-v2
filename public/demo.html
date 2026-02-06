@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReStocka Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: #09090b; 
+      color: #fff; 
+      min-height: 100vh;
+    }
+    .header { 
+      padding: 1rem; 
+      border-bottom: 1px solid #27272a; 
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; }
+    .badge { 
+      background: rgba(34,197,94,0.2); 
+      color: #22c55e; 
+      font-size: 0.75rem; 
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+    }
+    .banner { 
+      background: rgba(34,197,94,0.1); 
+      border-bottom: 1px solid rgba(34,197,94,0.2);
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #22c55e;
+    }
+    .hero { 
+      padding: 4rem 1rem; 
+      text-align: center; 
+    }
+    .hero h1 { 
+      font-size: 2.5rem; 
+      margin-bottom: 1rem; 
+    }
+    .hero p { 
+      color: #a1a1aa; 
+      margin-bottom: 2rem; 
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .stats { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+      gap: 1rem; 
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .stat { 
+      background: #18181b; 
+      border: 1px solid #27272a; 
+      padding: 1.5rem; 
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+    .stat-label { color: #a1a1aa; font-size: 0.875rem; }
+    .stat-value { font-size: 1.5rem; font-weight: bold; margin-top: 0.5rem; }
+    .cta { 
+      text-align: center; 
+      padding: 3rem 1rem; 
+    }
+    .btn {
+      display: inline-block;
+      background: #16a34a;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .btn:hover { background: #15803d; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <span class="logo">ReStocka</span>
+    <span class="badge">DEMO</span>
+  </header>
+  
+  <div class="banner">
+    <strong>Modo Demo:</strong> Estás viendo datos de ejemplo.
+  </div>
+  
+  <section class="hero">
+    <h1>Bienvenido a ReStocka! 👋</h1>
+    <p>Estás viendo cómo funciona ReStocka con datos de ejemplo. Tu restaurant podría verse así también.</p>
+  </section>
+  
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-label">Productos</div>
+      <div class="stat-value">156</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label" style="color: #eab308;">Stock Bajo</div>
+      <div class="stat-value" style="color: #eab308;">12</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label" style="color: #ef4444;">Crítico</div>
+      <div class="stat-value" style="color: #ef4444;">3</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pedidos</div>
+      <div class="stat-value">5</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Gasto Mes</div>
+      <div class="stat-value">$4,250</div>
+    </div>
+  </section>
+  
+  <section class="cta">
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Te gustó?</h2>
+    <p style="color: #a1a1aa; margin-bottom: 1.5rem;">
+      Regístrate gratis y empieza a controlar tu inventario en minutos.
+    </p>
+    <a href="/login?signup=true" class="btn">Crear Cuenta Gratis</a>
+  </section>
+</body>
+</html>

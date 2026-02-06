@@ -36,7 +36,9 @@ const App = () => (
           <LocationProvider>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/demo" element={<Index />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/pricing" element={<Index />} />
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
