@@ -24,6 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // If supabase client is not initialized, show demo mode
   const isDemoMode = !supabase;
+  
+  console.log('[AuthContext] isDemoMode:', isDemoMode, 'supabase:', !!supabase);
 
   const fetchMembership = async (userId: string) => {
     if (!supabase) return null;
@@ -46,8 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Skip auth initialization in demo mode
+    // DEMO MODE: Skip auth, create mock user
     if (isDemoMode) {
+      console.log('[AuthContext] Running in DEMO MODE');
       setLoading(false);
       return;
     }
