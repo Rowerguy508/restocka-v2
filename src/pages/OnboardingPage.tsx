@@ -6,8 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Package, MapPin, Navigation, X } from "lucide-react";
+import { Loader2, Package, MapPin, Navigation, X, CheckCircle } from "lucide-react";
 import { t, getLocale, formatCoordinates } from "@/lib/i18n";
+
+// Demo data to seed for new organizations
+const DEMO_PRODUCTS = [
+  { name: 'Pollo Entero', category: 'Proteínas', unit: 'UNIT' },
+  { name: 'Pechuga de Pollo', category: 'Proteínas', unit: 'UNIT' },
+  { name: 'Muslos de Pollo', category: 'Proteínas', unit: 'UNIT' },
+  { name: 'Papas Fritas', category: 'Acompañamientos', unit: 'UNIT' },
+  { name: 'Arroz Blanco', category: 'Acompañamientos', unit: 'UNIT' },
+  { name: 'Habichuelas', category: 'Acompañamientos', unit: 'UNIT' },
+  { name: 'Ensalada Verde', category: 'Acompañamientos', unit: 'UNIT' },
+  { name: 'Salsa BBQ', category: 'Salsas', unit: 'UNIT' },
+  { name: 'Salsa Picante', category: 'Salsas', unit: 'UNIT' },
+  { name: 'Ketchup', category: 'Salsas', unit: 'UNIT' },
+  { name: 'Refresco Cola', category: 'Bebidas', unit: 'UNIT' },
+  { name: 'Agua Natural', category: 'Bebidas', unit: 'UNIT' },
+  { name: 'Limonada Natural', category: 'Bebidas', unit: 'UNIT' },
+  { name: 'Flan de Queso', category: 'Postres', unit: 'UNIT' },
+  { name: 'Pastel de Naranja', category: 'Postres', unit: 'UNIT' },
+];
 
 export default function OnboardingPage() {
   const [orgName, setOrgName] = useState("");
@@ -54,6 +73,61 @@ export default function OnboardingPage() {
     setLocationCoords(null);
     setUseDeviceLocation(false);
     setLocationName("");
+  };
+
+  // Seed demo data for the new organization
+  const seedDemoData = async (orgId: string, locId: string) => {
+    try {
+      // Create demo products
+      const productInserts = DEMO_PRODUCTS.map((p, i) => ({
+        organization_id: orgId,
+        name: p.name,
+        category: p.category,
+        unit: p.unit,
+        active: true,
+      }));
+
+      const { data: products, error: prodError } = await supabase
+        .from("products")
+        .insert(productInserts)
+        .select("id");
+
+      if (prodError) throw prodError;
+
+      // Create stock levels with mixed quantities (some low, some normal)
+      if (products && products.length > 0) {
+        const stockLevels = products.map((p, i) => {
+          // Create realistic mix: 3 critical, 3 low, rest normal
+          let onHand: number;
+          if (i < 3) {
+            onHand = Math.floor(Math.random() * 5) + 3; // 3-7 (CRITICAL)
+          } else if (i < 6) {
+            onHand = Math.floor(Math.random() * 10) + 12; // 12-21 (LOW)
+          } else {
+            onHand = Math.floor(Math.random() * 80) + 30; // 30-110 (NORMAL)
+          }
+
+          return {
+            organization_id: orgId,
+            location_id: locId,
+            product_id: p.id,
+            on_hand: onHand,
+            updated_at: new Date().toISOString(),
+          };
+        });
+
+        const { error: stockError } = await supabase
+          .from("stock_levels")
+          .insert(stockLevels);
+
+        if (stockError) throw stockError;
+      }
+
+      console.log("✅ Demo data seeded successfully");
+    } catch (err) {
+      console.error("Error seeding demo data:", err);
+      // Don't throw - the org was created, just skip seeding
+    }
   };
 
   const handleGetStarted = async () => {
@@ -113,6 +187,9 @@ export default function OnboardingPage() {
 
       if (memberError) throw memberError;
 
+      // Seed demo data for this organization
+      await seedDemoData(org.id, location.id);
+
       // Success - redirect to dashboard
       navigate("/app/owner");
     } catch (err: any) {
@@ -136,7 +213,18 @@ export default function OnboardingPage() {
             {t('setup_subtitle')}
           </p>
 
-          <div className="space-y-4 pt-4">
+          {/* Demo Badge */}
+          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+            <p className="text-sm text-green-700">
+              {locale === 'es' 
+                ? "Tu organización incluirá productos de ejemplo para que veas cómo funciona."
+                : "Your organization will include sample products to see how it works."
+              }
+            </p>
+          </div>
+
+          <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="orgName" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />

@@ -34,3 +34,4 @@ lerna-debug.log*
 # Supabase
 .supabase
 .vercel
+.env*.local

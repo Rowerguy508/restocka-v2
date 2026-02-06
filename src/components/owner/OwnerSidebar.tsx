@@ -9,6 +9,7 @@ import {
   Plug,
   MapPin,
   Settings,
+  X,
 } from "lucide-react"
 
 const ownerLinks = [
@@ -23,18 +24,39 @@ const ownerLinks = [
   { to: "/app/owner/settings", label: "Settings", icon: Settings },
 ]
 
-export function OwnerSidebar() {
+interface OwnerSidebarProps {
+  mobile?: boolean
+  onClose?: () => void
+}
+
+export function OwnerSidebar({ mobile, onClose }: OwnerSidebarProps) {
   const location = useLocation()
 
+  const handleLinkClick = () => {
+    if (mobile && onClose) {
+      onClose()
+    }
+  }
+
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r/50 bg-sidebar/80 backdrop-blur-xl">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/20">
-          <span className="text-lg font-bold text-white">R</span>
+    <>
+      {/* Logo - only show on desktop */}
+      {!mobile && (
+        <div className="hidden lg:flex h-16 items-center gap-3 border-b border-border px-6">
+          <img src="/sidebar_logo.png" alt="ReStocka" className="h-9 w-auto" />
+          <span className="text-xl font-bold text-foreground">ReStocka</span>
         </div>
-        <span className="text-xl font-bold text-gradient">Restocka</span>
-      </div>
+      )}
+      
+      {/* Mobile logo with close button */}
+      {mobile && (
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <img src="/sidebar_logo.png" alt="ReStocka" className="h-8 w-auto" />
+            <span className="text-lg font-bold text-foreground">ReStocka</span>
+          </div>
+        </div>
+      )}
       
       {/* Navigation */}
       <nav className="space-y-1 p-4">
@@ -45,30 +67,33 @@ export function OwnerSidebar() {
             <Link
               key={link.to}
               to={link.to}
+              onClick={handleLinkClick}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary shadow-lg shadow-primary/10 border border-primary/20"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground hover-lift"
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
-              <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
+              <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
               {link.label}
             </Link>
           )
         })}
       </nav>
 
-      {/* Bottom section */}
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="rounded-lg bg-gradient-to-br from-green-500/10 to-cyan-500/10 p-4 border border-white/5">
-          <p className="text-xs text-muted-foreground mb-2">Pro Plan</p>
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-foreground">$29</span>
-            <span className="text-xs text-muted-foreground">/month</span>
+      {/* Bottom section - hidden on mobile */}
+      {!mobile && (
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="rounded-lg bg-gradient-to-br from-green-500/10 to-cyan-500/10 p-4 border border-white/5">
+            <p className="text-xs text-muted-foreground mb-2">Pro Plan</p>
+            <div className="flex items-center justify-between">
+              <span className="text-2xl font-bold text-foreground">$29</span>
+              <span className="text-xs text-muted-foreground">/month</span>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      )}
+    </>
   )
 }

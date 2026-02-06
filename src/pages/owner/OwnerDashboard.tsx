@@ -14,13 +14,17 @@ import {
   TrendingDown,
   Clock,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { LowStockItem, PurchaseOrder, Alert } from '@/types/database';
+import type { LowStockItem, PurchaseOrder, Alert, UsageRate } from '@/types/database';
 import { StockChartCarousel } from '@/components/charts/StockChartCarousel';
 import { StockTrendChart } from '@/components/charts/StockTrendChart';
 import { Link } from 'react-router-dom';
+import { AIInsightsPanel } from '@/components/ai/AIInsightsPanel';
+import { StockoutPredictions } from '@/components/ai/StockoutPredictions';
+import { createRestockaAI, type AIInsight, type PredictionResult } from '@/lib/ai';
 
 export default function OwnerDashboard() {
   const { membership } = useAuth();
@@ -32,6 +36,10 @@ export default function OwnerDashboard() {
   const [draftOrders, setDraftOrders] = useState<PurchaseOrder[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stockHistory, setStockHistory] = useState<any[]>([]);
+  const [usageRates, setUsageRates] = useState<UsageRate[]>([]);
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [predictions, setPredictions] = useState<PredictionResult[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -70,30 +78,7 @@ export default function OwnerDashboard() {
         setLowStockItems(mappedData.filter(i => i.status === 'LOW' || i.status === 'CRITICAL'));
       }
 
-      // Fetch low stock items separately if needed
-      const { data: stockData } = await supabase
-        .from('stock_levels')
-        .select(`
-          id,
-          quantity,
-          status,
-          products:product_id (id, name, unit),
-          locations:location_id (name)
-        `)
-        .in('status', ['LOW', 'CRITICAL'])
-        .limit(10);
-
-      if (stockData && !allStockData) {
-        setLowStockItems(stockData.map((item: any) => ({
-          product_id: item.products?.id,
-          product_name: item.products?.name || 'Producto',
-          location_name: item.locations?.name || 'Ubicación',
-          current_qty: item.quantity,
-          unit: item.products?.unit || 'unidad',
-          status: item.status as 'OK' | 'LOW' | 'CRITICAL',
-        })));
-      }
-
+      // Fetch draft orders
       const { data: ordersData } = await supabase
         .from('purchase_orders')
         .select('*')
@@ -104,6 +89,7 @@ export default function OwnerDashboard() {
 
       if (ordersData) setDraftOrders(ordersData);
 
+      // Fetch alerts
       const { data: alertsData } = await supabase
         .from('alerts')
         .select('*')
@@ -114,30 +100,82 @@ export default function OwnerDashboard() {
 
       if (alertsData) setAlerts(alertsData);
 
-      // Fetch stock history for trends
-      const { data: historyData } = await supabase
-        .from('stock_history')
-        .select(`
-          id,
-          quantity,
-          recorded_at,
-          products:product_id (name)
-        `)
-        .order('recorded_at', { ascending: true })
-        .limit(100);
+      // Fetch stock history for trends (optional table)
+      try {
+        const { data: historyData } = await supabase
+          .from('stock_history')
+          .select(`
+            id,
+            quantity,
+            recorded_at,
+            products:product_id (name)
+          `)
+          .order('recorded_at', { ascending: true })
+          .limit(100);
 
-      if (historyData) {
-        setStockHistory(historyData.map((item: any) => ({
-          product_id: item.products?.id,
-          product_name: item.products?.name || 'Producto',
-          quantity: item.quantity,
-          recorded_at: item.recorded_at,
+        if (historyData) {
+          setStockHistory(historyData.map((item: any) => ({
+            product_id: item.products?.id,
+            product_name: item.products?.name || 'Producto',
+            quantity: item.quantity,
+            recorded_at: item.recorded_at,
+          })));
+        }
+      } catch (historyErr) {
+        // stock_history table may not exist - that's OK
+        console.log('Stock history not available');
+      }
+
+      // Fetch usage rates for AI predictions
+      const { data: usageData } = await supabase
+        .from('usage_rates')
+        .select('*')
+        .eq('organization_id', membership.organization_id);
+
+      if (usageData) {
+        setUsageRates(usageData.map((u: any) => ({
+          id: u.id,
+          product_id: u.product_id,
+          location_id: u.location_id,
+          daily_usage: u.daily_usage,
+          updated_at: u.updated_at,
         })));
       }
+
+      // Generate AI insights
+      await generateAIInsights(mappedData, alertsData || [], ordersData?.length || 0);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateAIInsights = async (
+    stockItems: LowStockItem[],
+    alertsData: any[],
+    draftOrdersCount: number
+  ) => {
+    setAiLoading(true);
+    try {
+      const ai = createRestockaAI(membership?.organization_id || '');
+      
+      // Generate predictions
+      const predictionsResult = await ai.predictStockouts(stockItems, usageRates);
+      setPredictions(predictionsResult);
+      
+      // Generate insights
+      const insights = await ai.generateInsights(
+        predictionsResult,
+        [],
+        draftOrdersCount,
+        stockItems.filter(i => i.status === 'CRITICAL').length
+      );
+      setAiInsights(insights);
+    } catch (error) {
+      console.error('Error generating AI insights:', error);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -175,14 +213,14 @@ export default function OwnerDashboard() {
 
   return (
     <OwnerLayout>
-      <div className="p-4 lg:p-8 space-y-8">
+      <div className="p-4 lg:p-8 space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
               Panel de control
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm lg:text-base text-muted-foreground">
               Resumen del estado de tu inventario
             </p>
           </div>
@@ -190,7 +228,7 @@ export default function OwnerDashboard() {
             onClick={handleReorderCheck}
             disabled={reorderLoading}
             size="lg"
-            className="gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+            className="w-full lg:w-auto gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
           >
             {reorderLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -211,81 +249,89 @@ export default function OwnerDashboard() {
           </div>
         ) : (
           <>
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* Stats Grid - Stack on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
               <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-status-danger-bg to-card shadow-sm">
-                <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-status-danger/10 rounded-full blur-2xl" />
-                <CardContent className="p-6">
+                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-status-danger/10 rounded-full blur-xl" />
+                <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Crítico</p>
-                      <p className="text-4xl font-bold text-status-danger mt-1">{criticalCount}</p>
+                      <p className="text-xs lg:text-sm font-medium text-muted-foreground">Crítico</p>
+                      <p className="text-3xl lg:text-4xl font-bold text-status-danger mt-1">{criticalCount}</p>
                       <p className="text-xs text-muted-foreground mt-1">productos</p>
                     </div>
-                    <div className="h-14 w-14 rounded-2xl bg-status-danger/10 flex items-center justify-center">
-                      <TrendingDown className="h-7 w-7 text-status-danger" />
+                    <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-xl lg:rounded-2xl bg-status-danger/10 flex items-center justify-center">
+                      <TrendingDown className="h-6 w-6 lg:h-7 lg:w-7 text-status-danger" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-status-warning-bg to-card shadow-sm">
-                <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-status-warning/10 rounded-full blur-2xl" />
-                <CardContent className="p-6">
+                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-status-warning/10 rounded-full blur-xl" />
+                <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Stock bajo</p>
-                      <p className="text-4xl font-bold text-status-warning mt-1">{lowCount}</p>
+                      <p className="text-xs lg:text-sm font-medium text-muted-foreground">Stock bajo</p>
+                      <p className="text-3xl lg:text-4xl font-bold text-status-warning mt-1">{lowCount}</p>
                       <p className="text-xs text-muted-foreground mt-1">productos</p>
                     </div>
-                    <div className="h-14 w-14 rounded-2xl bg-status-warning/10 flex items-center justify-center">
-                      <Package className="h-7 w-7 text-status-warning" />
+                    <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-xl lg:rounded-2xl bg-status-warning/10 flex items-center justify-center">
+                      <Package className="h-6 w-6 lg:h-7 lg:w-7 text-status-warning" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-secondary to-card shadow-sm">
-                <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-primary/5 rounded-full blur-2xl" />
-                <CardContent className="p-6">
+                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-primary/5 rounded-full blur-xl" />
+                <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-                      <p className="text-4xl font-bold text-foreground mt-1">{draftOrders.length}</p>
+                      <p className="text-xs lg:text-sm font-medium text-muted-foreground">Pendientes</p>
+                      <p className="text-3xl lg:text-4xl font-bold text-foreground mt-1">{draftOrders.length}</p>
                       <p className="text-xs text-muted-foreground mt-1">órdenes</p>
                     </div>
-                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Clock className="h-7 w-7 text-primary" />
+                    <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-xl lg:rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <Clock className="h-6 w-6 lg:h-7 lg:w-7 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Charts Grid */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            {/* AI Section - Stack on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+              <div className="lg:col-span-2">
+                <StockoutPredictions predictions={predictions} loading={aiLoading} />
+              </div>
+              <AIInsightsPanel insights={aiInsights} loading={aiLoading} />
+            </div>
+
+            {/* Charts Grid - Stack on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <StockChartCarousel data={allStockItems} loading={loading} />
               <StockTrendChart data={stockHistory} loading={loading} />
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Low Stock Items - Takes 2 columns */}
+            {/* Main Content Grid - Stack on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+              {/* Low Stock Items - Takes 2 columns on desktop */}
               <Card className="lg:col-span-2 border-0 shadow-sm">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
+                <CardHeader className="pb-3 lg:pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                         <Package className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">Productos con stock bajo</CardTitle>
-                        <CardDescription>Requieren atención pronto</CardDescription>
+                        <CardTitle className="text-base lg:text-lg">Productos con stock bajo</CardTitle>
+                        <CardDescription className="text-xs lg:text-sm">Requieren atención pronto</CardDescription>
                       </div>
                     </div>
                     <Link 
                       to="/app/owner/products" 
-                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                      className="text-xs lg:text-sm text-primary hover:underline flex items-center gap-1 self-start"
                     >
                       Ver todos <ArrowRight className="h-3 w-3" />
                     </Link>
@@ -293,9 +339,9 @@ export default function OwnerDashboard() {
                 </CardHeader>
                 <CardContent>
                   {lowStockItems.length === 0 ? (
-                    <div className="text-center py-12 px-4">
-                      <div className="h-16 w-16 rounded-full bg-status-success/10 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="h-8 w-8 text-status-success" />
+                    <div className="text-center py-8 px-4">
+                      <div className="h-14 w-14 rounded-full bg-status-success/10 flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle2 className="h-7 w-7 text-status-success" />
                       </div>
                       <p className="font-medium text-foreground">¡Todo bien!</p>
                       <p className="text-sm text-muted-foreground mt-1">No hay productos con stock bajo</p>
@@ -305,18 +351,18 @@ export default function OwnerDashboard() {
                       {lowStockItems.map((item, index) => (
                         <div
                           key={item.product_id || index}
-                          className="group flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors duration-200"
+                          className="group flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 lg:p-4 rounded-lg lg:rounded-xl bg-secondary/50 hover:bg-secondary transition-colors duration-200 gap-2"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`h-2 w-2 rounded-full ${
+                          <div className="flex items-center gap-3">
+                            <div className={`h-2 w-2 rounded-full shrink-0 ${
                               item.status === 'CRITICAL' ? 'bg-status-danger' : 'bg-status-warning'
                             }`} />
-                            <div>
-                              <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
                                 {item.product_name}
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs lg:text-sm text-muted-foreground truncate">
                                 {item.location_name} • {item.current_qty} {item.unit}
                               </p>
                             </div>
@@ -331,54 +377,53 @@ export default function OwnerDashboard() {
 
               {/* Draft Orders */}
               <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-4">
+                <CardHeader className="pb-3 lg:pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <ShoppingCart className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Órdenes pendientes</CardTitle>
-                      <CardDescription>Borradores por aprobar</CardDescription>
+                      <CardTitle className="text-base lg:text-lg">Órdenes</CardTitle>
+                      <CardDescription className="text-xs lg:text-sm">Borradores</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {draftOrders.length === 0 ? (
-                    <div className="text-center py-10">
-                      <div className="h-14 w-14 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                    <div className="text-center py-8">
+                      <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
                         <ShoppingCart className="h-6 w-6 text-muted-foreground/50" />
                       </div>
-                      <p className="text-sm text-muted-foreground">Sin órdenes pendientes</p>
+                      <p className="text-sm text-muted-foreground">Sin órdenes</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {draftOrders.map((order, index) => (
                         <Link
                           key={order.id}
                           to={`/app/owner/purchase-orders`}
-                          className="block p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:shadow-sm"
+                          className="block p-3 lg:p-4 rounded-lg lg:rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:shadow-sm"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="font-medium text-foreground">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium text-foreground text-sm lg:text-base">
                               #{order.id.slice(0, 8)}
                             </p>
                             <POStatusBadge status={order.status} />
                           </div>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs lg:text-sm text-muted-foreground">
                             {new Date(order.created_at).toLocaleDateString('es-DO', {
                               day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
+                              month: 'short'
                             })}
                           </p>
                         </Link>
                       ))}
                       <Link 
                         to="/app/owner/purchase-orders"
-                        className="block text-center text-sm text-primary hover:underline pt-2"
+                        className="block text-center text-xs lg:text-sm text-primary hover:underline pt-2"
                       >
-                        Ver todas las órdenes
+                        Ver todas
                       </Link>
                     </div>
                   )}

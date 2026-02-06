@@ -118,33 +118,25 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      {/* Animated background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
-      </div>
-
       <div className="w-full max-w-md animate-fadeIn">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/20 glow-green">
-            <Package className="h-8 w-8 text-black" />
-          </div>
-          <h1 className="text-3xl font-bold text-gradient">Restocka</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <img src="/login_logo.png" alt="ReStocka" className="mx-auto mb-4 h-16 w-auto" />
+          <h1 className="text-3xl font-bold text-foreground">ReStocka</h1>
+          <p className="mt-1 text-muted-foreground">
             {locale === 'es' ? 'Control de inventario simple' : 'Simple inventory control'}
           </p>
         </div>
 
-        {/* Glass card */}
-        <div className="glass-card p-8">
+        {/* Card */}
+        <div className="bg-card border border-border p-8 rounded-xl">
           <div className="mb-6 text-center">
             <h2 className="text-xl font-semibold text-foreground">{getTitle()}</h2>
             <p className="text-sm text-muted-foreground mt-1">
               {mode === 'signup' 
                 ? locale === 'es' ? 'Crea tu cuenta' : 'Create your account'
                 : mode === 'reset' 
-                  ? locale === 'es' ? 'Recibe un enlace para恢复密码' : 'Receive a link to reset your password'
+                  ? locale === 'es' ? 'Recibe un enlace para resetear tu contraseña' : 'Receive a link to reset your password'
                   : locale === 'es' ? 'Ingresa a tu cuenta' : 'Sign in to your account'
               }
             </p>
@@ -161,7 +153,7 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 onClick={() => setMode('login')}
-                className="w-full glass"
+                className="w-full"
               >
                 {t('back_to_login')}
               </Button>
@@ -176,7 +168,7 @@ export default function LoginPage() {
                   placeholder={t('email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                   required
                   autoComplete="email"
                 />
@@ -191,7 +183,7 @@ export default function LoginPage() {
                     placeholder={t('password_placeholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                     required
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
@@ -207,7 +199,7 @@ export default function LoginPage() {
                     placeholder={t('password_placeholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                     required
                     autoComplete="new-password"
                   />

@@ -6,46 +6,40 @@
 
 @layer base {
   :root {
-    /* Web3 Dark Theme - Cyber/Neon palette */
-    --background: 220 40% 6%;
-    --foreground: 210 20% 96%;
-
-    /* Vibrant green primary with glow */
-    --primary: 142 76% 46%;
-    --primary-glow: 142 100% 50%;
-    --primary-foreground: 220 40% 8%;
+    /* Dark theme by default */
+    --background: 220 25% 8%;
+    --foreground: 220 20% 95%;
 
     /* Dark card surfaces */
-    --card: 220 35% 10%;
-    --card-foreground: 210 20% 96%;
+    --card: 220 25% 12%;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 220 35% 10%;
-    --popover-foreground: 210 20% 96%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 220 20% 95%;
 
-    /* Secondary with subtle purple accent */
-    --secondary: 270 25% 14%;
-    --secondary-foreground: 210 20% 90%;
+    /* Green accent */
+    --primary: 142 76% 46%;
+    --primary-foreground: 220 20% 10%;
 
-    /* Muted text */
-    --muted: 220 20% 40%;
+    --secondary: 220 25% 16%;
+    --secondary-foreground: 220 20% 90%;
+
+    --muted: 220 20% 25%;
     --muted-foreground: 220 15% 60%;
 
-    /* Accent - electric cyan */
     --accent: 185 85% 55%;
-    --accent-foreground: 220 40% 8%;
+    --accent-foreground: 220 20% 10%;
 
-    /* Destructive - neon red */
     --destructive: 350 85% 55%;
-    --destructive-foreground: 220 40% 8%;
+    --destructive-foreground: 220 20% 95%;
 
-    /* Borders */
     --border: 220 25% 20%;
     --input: 220 25% 20%;
     --ring: 142 76% 46%;
 
     --radius: 0.75rem;
 
-    /* Status colors - neon versions */
+    /* Status colors */
     --success: 142 76% 46%;
     --success-bg: 142 60% 15%;
     --warning: 45 100% 55%;
@@ -53,54 +47,54 @@
     --danger: 350 85% 55%;
     --danger-bg: 350 60% 15%;
 
-    /* Sidebar - deep dark with green accent */
-    --sidebar-bg: 220 40% 4%;
-    --sidebar-foreground: 210 20% 90%;
+    /* Sidebar */
+    --sidebar-bg: 220 25% 6%;
+    --sidebar-foreground: 220 20% 95%;
     --sidebar-primary: 142 76% 46%;
-    --sidebar-primary-foreground: 220 40% 8%;
-    --sidebar-accent: 270 25% 16%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 25% 16%;
+    --sidebar-primary-foreground: 220 20% 10%;
+    --sidebar-accent: 220 25% 14%;
+    --sidebar-accent-foreground: 220 20% 90%;
+    --sidebar-border: 220 25% 14%;
     --sidebar-ring: 142 76% 46%;
   }
 
   .light {
-    /* Light mode variant */
-    --background: 220 15% 98%;
-    --foreground: 220 20% 12%;
+    /* Light theme variant */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 15%;
 
-    --card: 220 15% 100%;
-    --card-foreground: 220 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
 
-    --popover: 220 15% 100%;
-    --popover-foreground: 220 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
 
     --primary: 142 76% 46%;
-    --primary-foreground: 220 40% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 20% 96%;
-    --secondary-foreground: 220 20% 20%;
+    --secondary: 220 15% 96%;
+    --secondary-foreground: 220 20% 25%;
 
-    --muted: 220 15% 50%;
+    --muted: 220 15% 94%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 185 70% 45%;
-    --accent-foreground: 220 40% 98%;
+    --accent: 185 85% 55%;
+    --accent-foreground: 220 20% 10%;
 
-    --destructive: 350 80% 50%;
-    --destructive-foreground: 220 40% 98%;
+    --destructive: 350 85% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 88%;
-    --input: 220 20% 88%;
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
     --ring: 142 76% 46%;
 
     --sidebar-bg: 220 20% 8%;
-    --sidebar-foreground: 210 20% 95%;
+    --sidebar-foreground: 220 20% 95%;
     --sidebar-primary: 142 76% 46%;
-    --sidebar-primary-foreground: 220 40% 8%;
-    --sidebar-accent: 270 20% 20%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 25% 20%;
+    --sidebar-primary-foreground: 220 20% 10%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 220 20% 90%;
+    --sidebar-border: 220 20% 12%;
     --sidebar-ring: 142 76% 46%;
   }
 }
@@ -135,30 +129,12 @@
 }
 
 @layer utilities {
-  /* Glass morphism effects */
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
-  }
-
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl;
-  }
-
-  /* Neon glow effects */
-  .glow-green {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
-  }
-
-  .glow-cyan {
-    box-shadow: 0 0 20px hsl(185 85% 55% / 0.3), 0 0 40px hsl(185 85% 55% / 0.1);
-  }
-
-  /* Gradient text */
+  /* Web3 gradient text */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-emerald-400 to-cyan-400;
   }
 
-  /* Animated gradient border */
+  /* Gradient border */
   .gradient-border {
     position: relative;
   }
@@ -212,24 +188,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
-  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.5); }
-}
-
-@keyframes slideIn {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out forwards;
 }

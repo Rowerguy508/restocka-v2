@@ -4,20 +4,20 @@ export function OwnerHeader() {
   const { user } = useAuth()
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-xl px-6">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground">Owner Dashboard</h1>
-        <p className="text-xs text-muted-foreground">Manage your inventory & orders</p>
+    <header className="sticky top-0 z-30 flex h-14 lg:h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-4 lg:px-6">
+      <div className="flex-1 min-w-0">
+        <h1 className="text-base lg:text-lg font-semibold text-foreground truncate">Dashboard</h1>
+        <p className="text-xs text-muted-foreground hidden sm:block">Manage your inventory</p>
       </div>
       
-      <div className="flex items-center gap-4">
-        {/* User avatar */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-cyan-400 text-sm font-bold text-black">
+      <div className="flex items-center gap-2 lg:gap-4">
+        {/* User avatar - show email on larger screens */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-cyan-400 text-sm lg:text-sm font-bold text-black">
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium text-foreground">{user?.email || 'User'}</p>
+          <div className="hidden md:block">
+            <p className="text-sm font-medium text-foreground truncate max-w-[150px]">{user?.email || 'User'}</p>
             <p className="text-xs text-muted-foreground">Owner</p>
           </div>
         </div>

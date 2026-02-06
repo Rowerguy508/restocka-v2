@@ -156,20 +156,11 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Animated background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(34,197,94,0.05)_25%,rgba(34,197,94,0.05)_26%,transparent_27%,transparent_74%,rgba(34,197,94,0.05)_75%,rgba(34,197,94,0.05)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(34,197,94,0.05)_25%,rgba(34,197,94,0.05)_26%,transparent_27%,transparent_74%,rgba(34,197,94,0.05)_75%,rgba(34,197,94,0.05)_76%,transparent_77%,transparent)] [background-size:50px_50px]" />
-      </div>
-
       {/* Navigation */}
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between relative z-10">
         <Link to="/" className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
-            <span className="text-white font-bold text-xl">R</span>
-          </div>
-          <span className="text-2xl font-bold text-gradient">ReStocka</span>
+          <img src="/nav_logo.png" alt="ReStocka" className="h-10 w-auto" />
+          <span className="text-2xl font-bold text-foreground">ReStocka</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -189,7 +180,7 @@ export default function Index() {
             </Button>
           </Link>
           <Link to="/login?signup=true">
-            <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-semibold">
+            <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-medium">
               {t.get_started}
             </Button>
           </Link>
@@ -206,7 +197,7 @@ export default function Index() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden glass-card mx-4 mb-4 p-4 space-y-4 relative z-10">
+        <div className="md:hidden bg-card border border-border rounded-xl mx-4 mb-4 p-4 space-y-4 relative z-10">
           <a href="#features" className="block py-2 text-muted-foreground">{t.nav_features}</a>
           <a href="#benefits" className="block py-2 text-muted-foreground">{t.nav_benefits}</a>
           <a href="#pricing" className="block py-2 text-muted-foreground">{t.nav_pricing}</a>
@@ -229,13 +220,13 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login?signup=true">
-              <Button size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-lg px-8 text-black font-semibold glow-green">
+              <Button size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-lg px-8 text-black font-medium glow-green">
                 {t.get_started}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 text-foreground hover:bg-white/10">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 hover:bg-white/10">
                 {t.see_demo}
               </Button>
             </Link>
@@ -258,7 +249,7 @@ export default function Index() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature) => (
-              <div key={feature.title} className="glass-card p-6 hover-lift">
+              <div key={feature.title} className="bg-card border border-border p-6 rounded-xl hover-lift">
                 <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500/20 to-cyan-500/20 flex items-center justify-center mb-4 border border-white/10">
                   <feature.icon className="h-6 w-6 text-green-400" />
                 </div>
@@ -287,11 +278,11 @@ export default function Index() {
                 ))}
               </ul>
             </div>
-            <div className="glass-card p-8">
-              <div className="rounded-xl bg-gradient-to-br from-green-500/10 to-cyan-500/10 p-6 border border-white/10">
+            <div className="bg-card border border-border rounded-xl p-8">
+              <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg p-6 border border-white/10">
                 <h4 className="font-semibold text-foreground mb-4">Dashboard Example</h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex justify-between items-center p-3 bg-secondary rounded-lg border border-border">
                     <span className="text-sm text-muted-foreground">Active products</span>
                     <span className="font-semibold text-foreground">127</span>
                   </div>
@@ -322,19 +313,19 @@ export default function Index() {
           
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Free Plan */}
-            <div className="glass-card p-6 hover-lift">
+            <div className="bg-card border border-border p-6 rounded-xl hover-lift">
               <h3 className="text-xl font-semibold mb-2 text-foreground">{pricing.free.name}</h3>
               <div className="text-4xl font-bold mb-4 text-foreground">{pricing.free.price}<span className="text-lg text-muted-foreground">/mo</span></div>
               <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                 {pricing.free.features.map(f => <li key={f}>• {f}</li>)}
               </ul>
               <Link to="/login?signup=true" className="block">
-                <Button className="w-full border-white/20 text-foreground hover:bg-white/10">{t.get_started}</Button>
+                <Button className="w-full border-white/20 hover:bg-white/10">{t.get_started}</Button>
               </Link>
             </div>
 
             {/* Pro Plan */}
-            <div className="glass-card p-6 glow-green border-green-500/30 relative">
+            <div className="bg-card border border-green-500/30 p-6 rounded-xl relative glow-green">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full">
                 MOST POPULAR
               </div>
@@ -349,14 +340,14 @@ export default function Index() {
             </div>
 
             {/* Enterprise */}
-            <div className="glass-card p-6 hover-lift">
+            <div className="bg-card border border-border p-6 rounded-xl hover-lift">
               <h3 className="text-xl font-semibold mb-2 text-foreground">{pricing.enterprise.name}</h3>
               <div className="text-4xl font-bold mb-4 text-foreground">{pricing.enterprise.price}<span className="text-lg text-muted-foreground">/mo</span></div>
               <ul className="space-y-2 text-sm text-muted-foreground mb-6">
                 {pricing.enterprise.features.map(f => <li key={f}>• {f}</li>)}
               </ul>
               <Link to="/login" className="block">
-                <Button className="w-full border-white/20 text-foreground hover:bg-white/10">Contact</Button>
+                <Button className="w-full border-white/20 hover:bg-white/10">Contact</Button>
               </Link>
             </div>
           </div>
@@ -366,11 +357,11 @@ export default function Index() {
       {/* CTA Section */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <div className="glass-card p-12 max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-12 max-w-3xl mx-auto border border-green-500/20">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
               {t.cta_title}
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-muted-foreground mb-8 text-lg">
               {t.cta_subtitle}
             </p>
             <Link to="/login?signup=true">
@@ -384,13 +375,11 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[hsl(var(--sidebar-bg))]/50 border-t border-white/5 py-12 relative z-10">
+      <footer className="bg-card border-t border-border py-12 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-                <span className="text-white font-bold">R</span>
-              </div>
+              <img src="/footer_logo.png" alt="ReStocka" className="h-8 w-auto" />
               <span className="text-white font-semibold">ReStocka</span>
             </div>
             <div className="text-sm text-muted-foreground">

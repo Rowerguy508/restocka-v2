@@ -22,7 +22,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // If supabase client is not initialized, show demo mode
+  const isDemoMode = !supabase;
+
   const fetchMembership = async (userId: string) => {
+    if (!supabase) return null;
     try {
       const { data, error } = await supabase
         .from('memberships')
@@ -42,6 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Skip auth initialization in demo mode
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const initAuth = async () => {
@@ -92,9 +102,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [isDemoMode]);
 
   const signInWithMagicLink = async (email: string) => {
+    if (!supabase) {
+      return { error: new Error('Supabase not initialized') };
+    }
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -109,7 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setMembership(null);
   };
 
