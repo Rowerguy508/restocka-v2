@@ -156,6 +156,9 @@ function LoginRoutes() {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Onboarding - accessible even if auth is loading */}
+      <Route path="/onboarding" element={<OnboardingPage />} />
+      
       <Route element={<ProtectedRoute />}>
         <Route element={<OwnerLayout />}>
           <Route path="/" element={<DashboardRedirect />} />
@@ -177,9 +180,6 @@ function AppRoutes() {
           {/* Manager routes */}
           <Route path="/app/manager" element={<ManagerDashboard />} />
         </Route>
-        
-        {/* Onboarding (standalone, not in layout) */}
-        <Route path="/onboarding" element={<OnboardingPage />} />
       </Route>
 
       {/* Login page accessible from app subdomain */}
