@@ -110,10 +110,17 @@ function DashboardRedirect() {
 
 // Landing page routes (restocka.app, www.restocka.app)
 function LandingRoutes() {
-  const { user } = useAuth();
+  const { user, membership } = useAuth();
 
-  // Redirect logged-in users to dashboard
+  // Redirect logged-in users to appropriate page
   if (user) {
+    if (!membership) {
+      return (
+        <Routes>
+          <Route path="*" element={<Navigate to="/onboarding" replace />} />
+        </Routes>
+      );
+    }
     return (
       <Routes>
         <Route path="*" element={<Navigate to="/app" replace />} />
@@ -126,6 +133,7 @@ function LandingRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
