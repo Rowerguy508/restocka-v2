@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ErrorBoundary } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Membership, Role } from '@/types/database';
@@ -53,25 +53,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const initAuth = async () => {
+      // Safety timeout - force loading to false after 10 seconds
+      timeoutId = setTimeout(() => {
+        if (mounted) {
+          console.warn('Auth initialization timeout - forcing loading=false');
+          setLoading(false);
+        }
+      }, 10000);
+
       try {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, session) => {
             if (!mounted) return;
+            
             setSession(session);
             setUser(session?.user ?? null);
+            
+            // Clear timeout and set loading to false
+            clearTimeout(timeoutId);
             
             // Defer membership fetch
             if (session?.user) {
               fetchMembership(session.user.id).then(membership => {
-                if (mounted) setMembership(membership);
+                if (mounted) {
+                  setMembership(membership);
+                  setLoading(false);
+                }
               });
             } else {
               setMembership(null);
+              setLoading(false);
             }
-            setLoading(false);
           }
         );
 
@@ -82,19 +98,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session?.user ?? null);
           if (session?.user) {
             fetchMembership(session.user.id).then(membership => {
-              if (mounted) setMembership(membership);
+              if (mounted) {
+                setMembership(membership);
+                setLoading(false);
+              }
             });
+          } else {
+            setLoading(false);
           }
-          setLoading(false);
         }
 
         return () => {
           mounted = false;
+          clearTimeout(timeoutId);
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          clearTimeout(timeoutId);
           setAuthError(error instanceof Error ? error.message : 'Auth init failed');
           setLoading(false);
         }
@@ -102,6 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [isDemoMode]);
 
   const signInWithMagicLink = async (email: string) => {

@@ -93,11 +93,19 @@ export default function LoginPage() {
         });
 
         if (error) {
+          console.error('Login error:', error); // Debug log
           if (error.message.includes('Invalid login credentials')) {
             setError(locale === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
+          } else if (error.message.includes('Email not confirmed')) {
+            setError(locale === 'es' ? 'Por favor confirma tu correo electrónico' : 'Please confirm your email');
+          } else if (error.message.includes('User not found')) {
+            setError(locale === 'es' ? 'Usuario no encontrado. ¿Necesitas crear una cuenta?' : 'User not found. Need to create an account?');
           } else {
             setError(error.message);
           }
+        } else {
+          // Success - navigate will happen via useEffect
+          console.log('Login successful, waiting for redirect...');
         }
       }
     } catch (err) {
