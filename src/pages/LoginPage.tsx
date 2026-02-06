@@ -69,7 +69,7 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { error, data } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -84,7 +84,15 @@ export default function LoginPage() {
             setError(error.message);
           }
         } else {
-          navigate('/onboarding');
+          // Check if user needs to confirm email
+          // If there's no session, email confirmation is required
+          if (data.user && !data.session) {
+            // Email confirmation required - redirect to confirmation page
+            navigate(`/email-confirmed?email=${encodeURIComponent(email.trim())}`);
+          } else {
+            // No confirmation required - go to onboarding
+            navigate('/onboarding');
+          }
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({

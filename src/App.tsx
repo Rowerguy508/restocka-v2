@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
+import EmailConfirmationPage from "./pages/EmailConfirmationPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import PricingPage from "./pages/PricingPage";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
@@ -156,6 +157,9 @@ function LoginRoutes() {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Email confirmation page */}
+      <Route path="/email-confirmed" element={<EmailConfirmationPage />} />
+      
       {/* Onboarding - accessible even if auth is loading */}
       <Route path="/onboarding" element={<OnboardingPage />} />
       
