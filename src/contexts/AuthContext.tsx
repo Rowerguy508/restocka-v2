@@ -55,11 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
     let timeoutId: NodeJS.Timeout;
 
+    console.log('[AuthContext] Starting initialization...');
+
     const initAuth = async () => {
       // Safety timeout - force loading to false after 10 seconds
       timeoutId = setTimeout(() => {
         if (mounted) {
-          console.warn('Auth initialization timeout - forcing loading=false');
+          console.warn('[AuthContext] Auth initialization timeout - forcing loading=false');
           setLoading(false);
         }
       }, 10000);
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, session) => {
+            console.log('[AuthContext] Auth state change:', event, session ? 'with session' : 'no session');
             if (!mounted) return;
             
             setSession(session);
@@ -78,8 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Defer membership fetch
             if (session?.user) {
+              console.log('[AuthContext] User found, fetching membership...');
               fetchMembership(session.user.id).then(membership => {
                 if (mounted) {
+                  console.log('[AuthContext] Membership:', membership);
                   setMembership(membership);
                   setLoading(false);
                 }
@@ -92,8 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         // THEN check for existing session
+        console.log('[AuthContext] Checking for existing session...');
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
+          console.log('[AuthContext] Existing session:', session ? 'found' : 'none');
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
@@ -114,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription.unsubscribe();
         };
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('[AuthContext] Init error:', error);
         if (mounted) {
           clearTimeout(timeoutId);
           setAuthError(error instanceof Error ? error.message : 'Auth init failed');
